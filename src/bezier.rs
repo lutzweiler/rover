@@ -133,10 +133,104 @@ where
             }
             index += 1;
         }
-        if index != num_ctrl_pts {
+        if index != (num_ctrl_pts + 4) {
             let err_message = format!("{} coordinates given, {} expected", index, num_ctrl_pts);
             return Err(err_message);
         }
         Ok(BezierRectangle::<Vec3, N, M>::new(points, colors))
+    }
+}
+
+
+#[cfg(test)]
+mod tests{
+    use super::*;
+
+    #[test]
+    fn initialization() {
+        let three_colors = [Color::new(1., 0., 0.), Color::new(0., 1., 0.), Color::new(0., 0., 1.)];
+        let four_colors = [
+            Color::new(1., 0., 0.),
+            Color::new(0., 1., 0.),
+            Color::new(0., 0., 1.),
+            Color::new(0., 1., 1.),
+        ];
+
+        let pts1 = [1, 2, 3, 4];
+        let pts2 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+        let pts3 = [1, 2, 3, 4, 5, 6];
+        let b = BezierCurve::<_, 3>::new(pts1);
+        let r = BezierRectangle::<_, 2, 3>::new(pts2, four_colors);
+        let t = BezierTriangle::<_, 2>::new(pts3, three_colors);
+
+        let v1 = Vec3::new(1., 2., 3.);
+        let v2 = Vec3::new(1., 4., 3.);
+        let v3 = Vec3::new(3., 2., 3.);
+        let pts4 = [v1, v2, v3];
+        let b2 = BezierCurve::<_, 2>::new(pts4);
+        let b3 = BezierCurve::<_, 0>::new([3]);
+
+        assert!(true);
+    }
+
+    #[test]
+    fn parse_off_cbez_3d() {
+        let example_cbez123 = "0. 0. 0.
+            1. 2. 3.
+            1. 3. -2.
+            2. .1 -.3
+            1. 2. 3.
+            1. 2. 3.
+            1. 1. 0.
+            0. 1. 1.
+            1. 0. 1.
+            1. 0. 1.";
+
+        let example_cbez333 = "0. 0. 0.
+            1. 2. 3.
+            1. 3. -2.
+            2. .1 -.3
+            1. 2. 3.
+            1. 2. 3.
+            1. 2. 3.
+            1. 2 3.
+            1. 2. 3.
+            1. 2. 3.
+            1. 2. 3.
+            1. 2. 3.
+            1. 2. 3.
+            1. 2. 3.
+            1. 2. 3.
+            1. 2. 3.
+            1. 1. 0.
+            0. 1. 1.
+            1. 0. 1.
+            1. 0. 1.";
+
+        match BezierRectangle::<Vec3, 1, 2>::from_string(example_cbez123) {
+            Ok(b) => {
+                assert_eq!(b.points[0], Vec3::new(0., 0., 0.));
+                assert_eq!(b.points[5], Vec3::new(1., 2., 3.));
+                assert_eq!(b.colors[0], Vec3::new(1., 1., 0.));
+                assert_eq!(b.colors[3], Vec3::new(1., 0., 1.));
+            },
+            Err(e) => {
+                println!("{}", e);
+                assert!(false);
+            } 
+        }
+
+        match BezierRectangle::<Vec3, 3, 3>::from_string(example_cbez333) {
+            Ok(b) => {
+                assert_eq!(b.points[0], Vec3::new(0., 0., 0.));
+                assert_eq!(b.points[15], Vec3::new(1., 2., 3.));
+                assert_eq!(b.colors[0], Vec3::new(1., 1., 0.));
+                assert_eq!(b.colors[3], Vec3::new(1., 0., 1.));
+            },
+            Err(e) => {
+                println!("{}", e);
+                assert!(false);
+            } 
+        }
     }
 }
