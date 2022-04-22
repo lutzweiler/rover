@@ -1,8 +1,8 @@
 use std::ops::{Add, Mul};
 
 pub enum Axis2D {
-    X,
-    Y,
+    U,
+    V,
 }
 
 pub enum Axis3D {
@@ -20,6 +20,15 @@ where
     T: Add<T, Output = T> + Mul<f64, Output = T>,
 {
     a * (1f64 - t) + b * t
+}
+
+pub fn bilerp<T>(a0: T, a1: T, b0: T, b1: T, s: f64, t: f64) -> T
+where
+    T: Add<T, Output = T> + Mul<f64, Output = T>,
+{
+    let a = lerp(a0, a1, s);
+    let b = lerp(b0, b1, s);
+    lerp(a, b, t)
 }
 
 /*
@@ -100,6 +109,19 @@ mod tests {
         for (a, b, t, r) in examples {
             assert_eq!(lerp(a, b, t), r);
         }
+    }
+
+    #[test]
+    fn bilinear_interpolation() {
+        let a0 = 1.;
+        let a1 = 3.;
+        let b0 = -2.;
+        let b1 = 4.;
+        assert_eq!(bilerp(a0, a1, b0, b1, 0., 0.), a0);
+        assert_eq!(bilerp(a0, a1, b0, b1, 1., 0.), a1);
+        assert_eq!(bilerp(a0, a1, b0, b1, 0., 1.), b0);
+        assert_eq!(bilerp(a0, a1, b0, b1, 1., 1.), b1);
+        assert_eq!(bilerp(a0, a1, b0, b1, 0.5, 0.5), 1.5);
     }
 
     #[test]

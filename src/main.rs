@@ -18,6 +18,15 @@
         let b = BezierCurve::<_, 2>::new([1,2,3]);
 */
 
+/*
+    At some points there are very ugly calculations with many hard-to-read indices
+    One improvement would be to create a Triangular Array struct that makes access
+    by (i,j,k) indices easy and can return arrays containing the values at each edge.
+    This could also make code more performant, it is not always clear where memory is or could be
+    referenced, cloned or copied
+*/
+
+//include all submodules so tests run
 mod bezier;
 mod math;
 mod triangle;
@@ -26,9 +35,7 @@ mod triangle;
 //use bevy::math::f64::DVec3 as Vec3;
 //use Vec3 as Color;
 
-fn main() {
-}
+fn main() {}
 
 #[cfg(test)]
-mod tests{
-}
+mod tests {}
