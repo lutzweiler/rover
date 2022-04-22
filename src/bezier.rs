@@ -135,15 +135,15 @@ where
         let mut colors_left = [Color::new(0., 0., 0.); 4];
         let mut colors_right = [Color::new(0., 0., 0.); 4];
         colors_left[0] = self.colors[0];
+        colors_left[2] = self.colors[2];
         colors_right[1] = self.colors[1];
-        colors_right[2] = self.colors[2];
-        colors_left[3] = self.colors[3];
+        colors_right[3] = self.colors[3];
         let new_color_top = math::lerp(self.colors[0], self.colors[1], t);
-        let new_color_bot = math::lerp(self.colors[3], self.colors[2], t);
+        let new_color_bot = math::lerp(self.colors[2], self.colors[3], t);
         colors_left[1] = new_color_top;
-        colors_left[2] = new_color_bot;
+        colors_left[3] = new_color_bot;
         colors_right[0] = new_color_top;
-        colors_right[3] = new_color_bot;
+        colors_right[2] = new_color_bot;
 
         //assemble everything into new patches
         (
@@ -152,8 +152,57 @@ where
         )
     }
 
-    fn subdivide_v(&self, t: f64) -> (Self, Self) {
-        unimplemented!()
+    fn subdivide_v(&self, t: f64) -> (Self, Self) where
+        [(); math::triangular_number(M + 1)]:
+    {
+        //control points for the new surfaces
+        let mut top = [self.points[0]; (N + 1) * (M + 1)];
+        let mut bot = [self.points[0]; (N + 1) * (M + 1)];
+
+        //calculate the control points
+        for i in 0..N+1 {
+            //take each column seperately
+            let mut col = [self.points[0]; M + 1];
+            for j in 0..M+1 {
+                col[j] = self.points[j*(N+1)+i];
+            }
+            let col = col;
+            println!("{:?}", col);
+
+            //compute new values
+            let res = math::compute_triangular_scheme::<T, { M + 1 }>(&col, t);
+            println!("{:?}", res);
+
+            //put the new values in the right place
+            let mut row_offset = 0;
+            let mut row_len = M + 1;
+            for j in 0..M + 1 {
+                top[j * (N + 1) + i] = res[row_offset + 0]; //first element of the row put in left in forward order
+                bot[(M - j) * (N + 1) + i] = res[row_offset + row_len - 1]; //last element of the row put in right in reverse order
+                row_offset += row_len;
+                row_len -= 1;
+            }
+        }
+
+        //calculate the new colors
+        let mut colors_top = [Color::new(0., 0., 0.); 4];
+        let mut colors_bot = [Color::new(0., 0., 0.); 4];
+        colors_top[0] = self.colors[0];
+        colors_top[1] = self.colors[1];
+        colors_bot[2] = self.colors[2];
+        colors_bot[3] = self.colors[3];
+        let new_color_left = math::lerp(self.colors[0], self.colors[2], t);
+        let new_color_right = math::lerp(self.colors[1], self.colors[3], t);
+        colors_top[2] = new_color_left;
+        colors_top[3] = new_color_right;
+        colors_bot[0] = new_color_left;
+        colors_bot[1] = new_color_right;
+
+        //assemble everything into new patches
+        (
+            BezierRectangle::<T, N, M>::new(top, colors_top),
+            BezierRectangle::<T, N, M>::new(bot, colors_bot),
+        )
     }
 }
 
@@ -239,6 +288,18 @@ mod tests {
         r
     }
 
+    fn example_bezier_rectangle_2() -> BezierRectangle<f64, 3, 3> {
+        let pts = [4., 0., 4., 0., 4., 0., 4., 4., 4., 0., 0., 4., 2., 2., 0., 0.];
+        let four_colors = [
+            Color::new(1., 0., 0.),
+            Color::new(0., 1., 0.),
+            Color::new(0., 0., 1.),
+            Color::new(1., 1., 1.),
+        ];
+        let r = BezierRectangle::<_, 3, 3>::new(pts, four_colors);
+        r
+    }
+
     #[test]
     fn initialization() {
         let three_colors = [Color::new(1., 0., 0.), Color::new(0., 1., 0.), Color::new(0., 0., 1.)];
@@ -318,7 +379,7 @@ mod tests {
     }
 
     #[test]
-    fn rectangular_bezier_surface_subdivide_u() {
+    fn bezier_rectangle_subdivide_u() {
         let surf = example_bezier_rectangle();
         let (l, r) = surf.subdivide(math::Axis2D::U, 0.5);
         println!("left {:?}", l);
@@ -339,15 +400,93 @@ mod tests {
 
         //test colors
         assert_eq!(l.colors[1], Color::new(0.5, 0.5, 0.));
-        assert_eq!(l.colors[2], Color::new(0.5, 0.5, 1.));
+        assert_eq!(l.colors[3], Color::new(0.5, 0.5, 1.));
         assert_eq!(r.colors[0], Color::new(0.5, 0.5, 0.));
-        assert_eq!(r.colors[3], Color::new(0.5, 0.5, 1.));
+        assert_eq!(r.colors[2], Color::new(0.5, 0.5, 1.));
 
         //TODO: make a test for evaluating l(.5, .5) == surf(.25, .5) once evaluation is implemented
     }
 
-    //#[test]
+    #[test]
+    fn bezier_rectangle_subdivide_v() {
+        let surf = example_bezier_rectangle();
+        let (t, b) = surf.subdivide(math::Axis2D::V, 0.5);
+        println!("top {:?}", t);
+        println!("bottom {:?}", b);
+
+        //points at the split line match
+        assert_eq!(t.points[8 + 0], b.points[0 + 0]);
+        assert_eq!(t.points[8 + 1], b.points[0 + 1]);
+        assert_eq!(t.points[8 + 2], b.points[0 + 2]);
+        assert_eq!(t.points[8 + 3], b.points[0 + 3]);
+
+        //points on top and bottom border match with original
+        assert_eq!(t.points[0 + 0], surf.points[0 + 0]);
+        assert_eq!(t.points[0 + 1], surf.points[0 + 1]);
+        assert_eq!(t.points[0 + 2], surf.points[0 + 2]);
+        assert_eq!(t.points[0 + 3], surf.points[0 + 3]);
+        assert_eq!(b.points[8 + 0], surf.points[8 + 0]);
+        assert_eq!(b.points[8 + 1], surf.points[8 + 1]);
+        assert_eq!(b.points[8 + 2], surf.points[8 + 2]);
+        assert_eq!(b.points[8 + 3], surf.points[8 + 3]);
+
+        //test colors
+        assert_eq!(t.colors[2], Color::new(0.5, 0.0, 0.5));
+        assert_eq!(t.colors[3], Color::new(0.5, 1.0, 0.5));
+        assert_eq!(b.colors[0], Color::new(0.5, 0.0, 0.5));
+        assert_eq!(b.colors[1], Color::new(0.5, 1.0, 0.5));
+
+        //TODO: make a test for evaluating t(.5, .5) == surf(.5, .25) once evaluation is implemented
+    }
+
+    #[test]
     fn bezier_rectangle_subdivide() {
-        //subdiv u B = subdiv v B transposed
+        //take a surface and divide it into left and right
+        //rotate the original surface and divide it into top and bottom
+        //rotate top and bottom back
+        //now left == top and right == bottom
+        let surf = example_bezier_rectangle_2();
+        let (l,r) = surf.subdivide(math::Axis2D::U, 0.5);
+        let mut transposed_points = [0.;16];
+        for i in 0..4 {
+            for j in 0..4 {
+                transposed_points[i*4+j] = surf.points[j*4+i];
+            }
+        }
+        let transposed_points = transposed_points;
+        let transposed = BezierRectangle::<f64,3,3>::new(transposed_points, surf.colors);
+        let (t,b) = transposed.subdivide(math::Axis2D::V, 0.5);
+        let mut top_retransposed = [0.;16];
+        let mut bot_retransposed = [0.;16];
+        for i in 0..4 {
+            for j in 0..4 {
+                top_retransposed[i*4+j] = t.points[j*4+i];
+                bot_retransposed[i*4+j] = b.points[j*4+i];
+            }
+        }
+        assert_eq!(l.points, top_retransposed);
+        assert_eq!(r.points, bot_retransposed);
+    }
+
+    #[test]
+    fn bezier_rectangle_double_subdivide() {
+        //the order of subsequent U- and V-subdivisions does not matter
+        let surf = example_bezier_rectangle_2();
+        let (al,ar) = surf.subdivide(math::Axis2D::U, 0.5);
+        let (atl,abl) = al.subdivide(math::Axis2D::V, 0.5);
+        let (atr,abr) = ar.subdivide(math::Axis2D::V, 0.5);
+
+        let (bt,bb) = surf.subdivide(math::Axis2D::V, 0.5);
+        let (btl,btr) = bt.subdivide(math::Axis2D::U, 0.5);
+        let (bbl,bbr) = bb.subdivide(math::Axis2D::U, 0.5);
+
+        assert_eq!(atl.points, btl.points);
+        assert_eq!(atr.points, btr.points);
+        assert_eq!(abl.points, bbl.points);
+        assert_eq!(abr.points, bbr.points);
+        assert_eq!(atl.colors, btl.colors);
+        assert_eq!(atr.colors, btr.colors);
+        assert_eq!(abl.colors, bbl.colors);
+        assert_eq!(abr.colors, bbr.colors);
     }
 }
