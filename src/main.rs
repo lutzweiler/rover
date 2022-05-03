@@ -31,11 +31,11 @@ mod bezier;
 mod math;
 mod triangle;
 
-//use crate::bezier::*;
-//use bevy::math::f64::DVec3 as Vec3;
-//use Vec3 as Color;
+use bevy::math::f64::DVec3 as Vec3;
+use Vec3 as Color;
 
-fn main() {}
+fn main() {
+}
 
 #[cfg(test)]
 mod tests {}

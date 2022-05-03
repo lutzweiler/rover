@@ -10,15 +10,6 @@ pub trait FromString {
     where
         Self: Sized;
 }
-
-pub struct BezierCurve<T, const N: usize>
-where
-    T: Copy + Add<T, Output = T> + Mul<f64, Output = T>,
-    [(); N + 1]:,
-{
-    points: [T; N + 1],
-}
-
 /*
     A rectangular bezier patch of degree N in u direction and degree M in v direction
     control point b_ij is stored at points[j*(N+1) + i]
@@ -45,31 +36,6 @@ where
     colors: [Color; 4],
 }
 
-pub struct BezierTriangle<T, const N: usize>
-where
-    T: Copy + Add<T, Output = T> + Mul<f64, Output = T>,
-    [(); math::triangular_number(N + 1)]:,
-{
-    points: [T; math::triangular_number(N + 1)],
-    colors: [Color; 3],
-}
-
-impl<T, const N: usize> BezierCurve<T, N>
-where
-    T: Copy + Add<T, Output = T> + Mul<f64, Output = T>,
-    [(); N + 1]:,
-{
-    pub fn new(points: [T; N + 1]) -> Self {
-        BezierCurve { points: points }
-    }
-    fn evaluate(&self, t: f64) -> T {
-        unimplemented!()
-    }
-    fn subdivide(&self, t: f64) -> (Self, Self) {
-        unimplemented!()
-    }
-}
-
 impl<T, const N: usize, const M: usize> BezierRectangle<T, N, M>
 where
     T: Copy + Add<T, Output = T> + Mul<f64, Output = T> + std::fmt::Debug,
@@ -86,7 +52,7 @@ where
         unimplemented!()
     }
 
-    fn subdivide(&self, axis: math::Axis2D, t: f64) -> (Self, Self)
+    pub fn subdivide(&self, axis: math::Axis2D, t: f64) -> (Self, Self)
     where
         [(); math::triangular_number(N + 1)]:,
         [(); math::triangular_number(M + 1)]:,
@@ -152,19 +118,20 @@ where
         )
     }
 
-    fn subdivide_v(&self, t: f64) -> (Self, Self) where
-        [(); math::triangular_number(M + 1)]:
+    fn subdivide_v(&self, t: f64) -> (Self, Self)
+    where
+        [(); math::triangular_number(M + 1)]:,
     {
         //control points for the new surfaces
         let mut top = [self.points[0]; (N + 1) * (M + 1)];
         let mut bot = [self.points[0]; (N + 1) * (M + 1)];
 
         //calculate the control points
-        for i in 0..N+1 {
+        for i in 0..N + 1 {
             //take each column seperately
             let mut col = [self.points[0]; M + 1];
-            for j in 0..M+1 {
-                col[j] = self.points[j*(N+1)+i];
+            for j in 0..M + 1 {
+                col[j] = self.points[j * (N + 1) + i];
             }
             let col = col;
             println!("{:?}", col);
@@ -203,28 +170,6 @@ where
             BezierRectangle::<T, N, M>::new(top, colors_top),
             BezierRectangle::<T, N, M>::new(bot, colors_bot),
         )
-    }
-}
-
-impl<T, const N: usize> BezierTriangle<T, N>
-where
-    T: Copy + Add<T, Output = T> + Mul<f64, Output = T>,
-    [(); math::triangular_number(N + 1)]:,
-{
-    pub fn new(points: [T; math::triangular_number(N + 1)], colors: [Color; 3]) -> Self {
-        BezierTriangle {
-            points: points,
-            colors: colors,
-        }
-    }
-    fn evaluate(&self, u: f64, v: f64) -> T {
-        unimplemented!()
-    }
-    pub fn subdivide(&self, u: f64, v: f64) -> (Self, Self) {
-        unimplemented!()
-    }
-    fn triangulate(&self, max_curveature: f64, max_triangles: u32) -> Vec<Triangle<T>> {
-        unimplemented!()
     }
 }
 
@@ -298,23 +243,6 @@ mod tests {
         ];
         let r = BezierRectangle::<_, 3, 3>::new(pts, four_colors);
         r
-    }
-
-    #[test]
-    fn initialization() {
-        let three_colors = [Color::new(1., 0., 0.), Color::new(0., 1., 0.), Color::new(0., 0., 1.)];
-
-        let pts1 = [1., 2., 3., 4.];
-        let pts3 = [1., 2., 3., 4., 5., 6.];
-        let b = BezierCurve::<_, 3>::new(pts1);
-        let t = BezierTriangle::<_, 2>::new(pts3, three_colors);
-
-        let v1 = Vec3::new(1., 2., 3.);
-        let v2 = Vec3::new(1., 4., 3.);
-        let v3 = Vec3::new(3., 2., 3.);
-        let pts4 = [v1, v2, v3];
-        let b2 = BezierCurve::<_, 2>::new(pts4);
-        let b3 = BezierCurve::<_, 0>::new([3.]);
     }
 
     #[test]
@@ -446,22 +374,22 @@ mod tests {
         //rotate top and bottom back
         //now left == top and right == bottom
         let surf = example_bezier_rectangle_2();
-        let (l,r) = surf.subdivide(math::Axis2D::U, 0.5);
-        let mut transposed_points = [0.;16];
+        let (l, r) = surf.subdivide(math::Axis2D::U, 0.5);
+        let mut transposed_points = [0.; 16];
         for i in 0..4 {
             for j in 0..4 {
-                transposed_points[i*4+j] = surf.points[j*4+i];
+                transposed_points[i * 4 + j] = surf.points[j * 4 + i];
             }
         }
         let transposed_points = transposed_points;
-        let transposed = BezierRectangle::<f64,3,3>::new(transposed_points, surf.colors);
-        let (t,b) = transposed.subdivide(math::Axis2D::V, 0.5);
-        let mut top_retransposed = [0.;16];
-        let mut bot_retransposed = [0.;16];
+        let transposed = BezierRectangle::<f64, 3, 3>::new(transposed_points, surf.colors);
+        let (t, b) = transposed.subdivide(math::Axis2D::V, 0.5);
+        let mut top_retransposed = [0.; 16];
+        let mut bot_retransposed = [0.; 16];
         for i in 0..4 {
             for j in 0..4 {
-                top_retransposed[i*4+j] = t.points[j*4+i];
-                bot_retransposed[i*4+j] = b.points[j*4+i];
+                top_retransposed[i * 4 + j] = t.points[j * 4 + i];
+                bot_retransposed[i * 4 + j] = b.points[j * 4 + i];
             }
         }
         assert_eq!(l.points, top_retransposed);
@@ -472,13 +400,13 @@ mod tests {
     fn bezier_rectangle_double_subdivide() {
         //the order of subsequent U- and V-subdivisions does not matter
         let surf = example_bezier_rectangle_2();
-        let (al,ar) = surf.subdivide(math::Axis2D::U, 0.5);
-        let (atl,abl) = al.subdivide(math::Axis2D::V, 0.5);
-        let (atr,abr) = ar.subdivide(math::Axis2D::V, 0.5);
+        let (al, ar) = surf.subdivide(math::Axis2D::U, 0.5);
+        let (atl, abl) = al.subdivide(math::Axis2D::V, 0.5);
+        let (atr, abr) = ar.subdivide(math::Axis2D::V, 0.5);
 
-        let (bt,bb) = surf.subdivide(math::Axis2D::V, 0.5);
-        let (btl,btr) = bt.subdivide(math::Axis2D::U, 0.5);
-        let (bbl,bbr) = bb.subdivide(math::Axis2D::U, 0.5);
+        let (bt, bb) = surf.subdivide(math::Axis2D::V, 0.5);
+        let (btl, btr) = bt.subdivide(math::Axis2D::U, 0.5);
+        let (bbl, bbr) = bb.subdivide(math::Axis2D::U, 0.5);
 
         assert_eq!(atl.points, btl.points);
         assert_eq!(atr.points, btr.points);
