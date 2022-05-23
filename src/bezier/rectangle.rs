@@ -81,7 +81,6 @@ where
             let mut row = [self.points[0]; N + 1];
             row[..].copy_from_slice(&self.points[j * (N + 1)..(j + 1) * (N + 1)]);
             let row = row;
-            println!("{:?}", row);
 
             //compute new values
             let res = math::compute_triangular_scheme::<T, { N + 1 }>(&row, t);
@@ -134,11 +133,9 @@ where
                 col[j] = self.points[j * (N + 1) + i];
             }
             let col = col;
-            println!("{:?}", col);
 
             //compute new values
             let res = math::compute_triangular_scheme::<T, { M + 1 }>(&col, t);
-            println!("{:?}", res);
 
             //put the new values in the right place
             let mut row_offset = 0;
@@ -173,6 +170,46 @@ where
     }
 }
 
+impl<const N: usize, const M: usize> BezierRectangle<Vec3, N, M>
+where
+    [(); (N + 1) * (M + 1)]:,
+{
+    fn corner_normals(&self) -> (Vec3, Vec3, Vec3, Vec3) {
+        let b00u = self.points[0 * (N + 1) + 1] - self.points[0 * (N + 1) + 0];
+        let b00v = self.points[1 * (N + 1) + 0] - self.points[0 * (N + 1) + 0];
+        let b10u = self.points[0 * (N + 1) + N - 1] - self.points[0 * (N + 1) + N];
+        let b10v = self.points[1 * (N + 1) + N] - self.points[0 * (N + 1) + N];
+        let b01u = self.points[M * (N + 1) + 1] - self.points[M * (N + 1) + 0];
+        let b01v = self.points[(M - 1) * (N + 1) + 0] - self.points[M * (N + 1) + 0];
+        let b11u = self.points[M * (N + 1) + N - 1] - self.points[M * (N + 1) + N];
+        let b11v = self.points[(M - 1) * (N + 1) + N] - self.points[M * (N + 1) + N];
+        let n00 = b00u.cross(b00v).normalize_or_zero();
+        let n10 = b10u.cross(b10v).normalize_or_zero();
+        let n01 = b01u.cross(b01v).normalize_or_zero();
+        let n11 = b11u.cross(b11v).normalize_or_zero();
+        (n00, n10, n01, n11)
+    }
+
+    fn to_triangles(&self) -> Vec<Triangle<Vec3>> {
+        let v00 = self.points[0];
+        let v01 = self.points[N];
+        let v10 = self.points[M * (N + 1)];
+        let v11 = self.points[M * (N + 1) + M];
+        let (n0, n1, n2, n3) = self.corner_normals();
+        let t1 = Triangle::new(
+            [v00, v10, v01],
+            [self.colors[0], self.colors[1], self.colors[2]],
+            [n0, n1, n2],
+        );
+        let t2 = Triangle::new(
+            [v10, v11, v01],
+            [self.colors[1], self.colors[3], self.colors[2]],
+            [n1, n3, n2],
+        );
+        vec![t1, t2]
+    }
+}
+
 impl<const N: usize, const M: usize> FromString for BezierRectangle<Vec3, N, M>
 where
     [(); (N + 1) * (M + 1)]:,
@@ -202,10 +239,10 @@ where
             }
             if index < num_ctrl_pts {
                 points[index] = value;
-                println!("point {}", value);
+                //println!("point {}", value);
             } else if index < num_ctrl_pts + 4 {
                 colors[index - num_ctrl_pts] = value;
-                println!("color {}", value);
+                //println!("color {}", value);
             }
             index += 1;
         }
@@ -220,6 +257,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::time::{Duration, Instant};
 
     fn example_bezier_rectangle() -> BezierRectangle<f64, 3, 2> {
         let pts = [4., 0., 4., 0., 4., 0., 4., 4., 4., 0., 0., 4.];
@@ -416,5 +454,55 @@ mod tests {
         assert_eq!(atr.colors, btr.colors);
         assert_eq!(abl.colors, bbl.colors);
         assert_eq!(abr.colors, bbr.colors);
+    }
+
+    #[test]
+    //use cargo test -- --nocapture to see performance numbers
+    fn bezier_rectangle_subdivide_performance() {
+        let cbez333 = "0. 0. 0.
+            1. 2. 3.
+            1. 3. -2.
+            2. .1 -.3
+            1. 2. 3.
+            1. 2. 3.
+            1. 2. 3.
+            1. 2 3.
+            1. 2. 3.
+            1. 2. 3.
+            1. 2. 3.
+            1. 2. 3.
+            1. 2. 3.
+            1. 2. 3.
+            1. 2. 3.
+            1. 2. 3.
+            1. 1. 0.
+            0. 1. 1.
+            1. 0. 1.
+            1. 0. 1.";
+        let surf = BezierRectangle::<Vec3, 3, 3>::from_string(cbez333).unwrap();
+        let mut old_vec = vec![surf];
+        let mut new_vec = Vec::<BezierRectangle<Vec3, 3, 3>>::new();
+        for i in 0..9 {
+            let now = Instant::now();
+            for s in &old_vec {
+                let (l, r) = s.subdivide(math::Axis2D::U, 0.5);
+                let (tl, bl) = l.subdivide(math::Axis2D::V, 0.5);
+                let (tr, br) = l.subdivide(math::Axis2D::V, 0.5);
+                new_vec.push(tl);
+                new_vec.push(tr);
+                new_vec.push(bl);
+                new_vec.push(br);
+            }
+            let len = new_vec.len();
+            let nanos = now.elapsed().as_nanos();
+            let secs = nanos as f64 / 1_000_000_000f64;
+            let per_surf = nanos / len as u128;
+            println!(
+                "Computing {} surfaces took {} seconds, that is {} ns per surface",
+                len, secs, per_surf
+            );
+            old_vec.clear();
+            (new_vec, old_vec) = (old_vec, new_vec);
+        }
     }
 }

@@ -32,6 +32,8 @@ mod math;
 mod triangle;
 
 use bevy::math::f64::DVec3 as Vec3;
+use bezier::rectangle::BezierRectangle;
+use bezier::rectangle::FromString;
 use Vec3 as Color;
 
 fn main() {
