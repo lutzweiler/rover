@@ -31,12 +31,88 @@ mod bezier;
 mod math;
 mod triangle;
 
-use bevy::math::f64::DVec3 as Vec3;
+//use bevy::math::f64::DVec3 as Vec3;
 use bezier::rectangle::BezierRectangle;
 use bezier::rectangle::FromString;
-use Vec3 as Color;
+
+use bevy::{
+    prelude::*,
+    render::{
+        mesh::{Indices, PrimitiveTopology},
+        camera::{Camera3d, CameraPlugin}
+    },
+    pbr::wireframe::{WireframeConfig, WireframePlugin},
+
+};
+use bevy_flycam::{PlayerPlugin};
 
 fn main() {
+    App::new()
+        .insert_resource(Msaa { samples: 4 })
+        .add_plugins(DefaultPlugins)
+        //.add_plugin(PlayerPlugin)
+        .add_startup_system(setup)
+        .run();
+}
+
+fn example_mesh() -> Mesh {
+    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
+    let up = Vec3::Z;
+    let indices = vec![0,1,2];
+    let positions = vec![[0.,0.,0.], [0.,1.,0.], [1.,0.,0.]];
+    let normals = vec![[0.,0.,1.], [0.,0.,1.], [0.,0.,1.]];
+    let colors = vec![[1.,0.,0.,1.], [0.,1.,0.,1.], [0.,0.,1.,1.]];
+    let uvs = vec![[0.0, 0.0],[0.0, 0.0],[0.0, 0.0]];
+
+    mesh.set_indices(Some(Indices::U32(indices)));
+    mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
+    mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
+    mesh.insert_attribute(Mesh::ATTRIBUTE_COLOR, colors);
+    mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
+    return mesh;
+}
+
+fn setup(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>
+) {
+    let mesh = example_mesh();
+    let mut triangle_material = StandardMaterial::default();
+    triangle_material.cull_mode = None;
+    triangle_material.base_color = Color::WHITE; //lets 100% of vertex colors through
+    triangle_material.double_sided = false; //for lighting on backside not sure which is right
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(mesh),
+        material: materials.add(triangle_material),
+        transform: Transform::from_xyz(0.0, 0.5, 0.0),
+        ..default()
+    });
+    // cube
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+        material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
+        transform: Transform::from_xyz(0.0, 0.5, -1.5),
+        ..default()
+    });
+    
+    // light
+    commands.spawn_bundle(PointLightBundle {
+        point_light: PointLight {
+            intensity: 1500.0,
+            shadows_enabled: true,
+            ..default()
+        },
+        transform: Transform::from_xyz(4.0, 8.0, 4.0),
+        ..default()
+    });
+    commands
+        .spawn()
+        .insert_bundle(PerspectiveCameraBundle {
+            transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
+            ..Default::default()
+        });
+
 }
 
 #[cfg(test)]
