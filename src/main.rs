@@ -44,7 +44,9 @@ use bevy::{
     pbr::wireframe::{WireframeConfig, WireframePlugin},
 
 };
-use bevy_flycam::{PlayerPlugin};
+//use bevy_flycam::{PlayerPlugin};
+//use bevy_fly_camera::{FlyCamera, FlyCameraPlugin};
+mod bevy_fly_camera;
 
 fn main() {
     App::new()
@@ -52,6 +54,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         //.add_plugin(PlayerPlugin)
         .add_startup_system(setup)
+        .add_plugin(bevy_fly_camera::lib::FlyCameraPlugin)
         .run();
 }
 
@@ -111,7 +114,8 @@ fn setup(
         .insert_bundle(PerspectiveCameraBundle {
             transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
             ..Default::default()
-        });
+        })
+        .insert(bevy_fly_camera::lib::FlyCamera::default());
 
 }
 
