@@ -2,6 +2,10 @@ use bevy::math::f64::DVec3 as Vec3;
 use std::ops::{Add, Mul};
 use Vec3 as Color;
 
+pub trait ToTriangle {
+    fn to_triangles(&self) -> Vec<Triangle<Vec3>>;
+}
+
 pub struct Triangle<T>
 where
     T: Copy + Add<T, Output = T> + Mul<f64, Output = T>,

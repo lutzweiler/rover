@@ -3,7 +3,8 @@ use std::ops::{Add, Mul};
 use Vec3 as Color;
 
 use crate::math;
-use crate::triangle::Triangle;
+use crate::triangle::{Triangle, ToTriangle};
+use crate::subdivision::Subdivide;
 
 pub trait FromString {
     fn from_string(lines: &str) -> Result<Self, String>
@@ -50,6 +51,18 @@ where
 
     fn evaluate(&self, u: f64, v: f64) -> T {
         unimplemented!()
+    }
+
+    pub fn subdivide_cross(&self) -> Vec<Self>
+    where
+        [(); math::triangular_number(N + 1)]:,
+        [(); math::triangular_number(M + 1)]:,
+    {
+        let (l, r) = self.subdivide(math::Axis2D::U, 0.5);
+        let (tl, bl) = l.subdivide(math::Axis2D::V, 0.5);
+        let (tr, br) = r.subdivide(math::Axis2D::V, 0.5);
+
+        vec![tl, bl, tr, br]
     }
 
     pub fn subdivide(&self, axis: math::Axis2D, t: f64) -> (Self, Self)
@@ -190,6 +203,12 @@ where
         (n00, n10, n01, n11)
     }
 
+}
+
+impl<const N: usize, const M: usize> ToTriangle for BezierRectangle<Vec3, N, M>
+where
+    [(); (N + 1) * (M + 1)]:,
+{
     fn to_triangles(&self) -> Vec<Triangle<Vec3>> {
         let v00 = self.points[0];
         let v01 = self.points[N];
@@ -251,6 +270,18 @@ where
             return Err(err_message);
         }
         Ok(BezierRectangle::<Vec3, N, M>::new(points, colors))
+    }
+}
+
+impl<T, const N: usize, const M: usize> Subdivide for BezierRectangle<T, N, M>
+where
+    T: Copy + Add<T, Output = T> + Mul<f64, Output = T> + std::fmt::Debug,
+    [(); (N + 1) * (M + 1)]:,
+    [(); math::triangular_number(N + 1)]:,
+    [(); math::triangular_number(M + 1)]:,
+{
+    fn subdivide(&self) -> Vec<Self> {
+        self.subdivide_cross()
     }
 }
 
