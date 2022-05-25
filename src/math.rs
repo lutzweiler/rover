@@ -15,16 +15,16 @@ pub const fn triangular_number(n: usize) -> usize {
     n * (n + 1) / 2
 }
 
-pub fn lerp<T>(a: T, b: T, t: f64) -> T
+pub fn lerp<T>(a: T, b: T, t: f32) -> T
 where
-    T: Add<T, Output = T> + Mul<f64, Output = T>,
+    T: Add<T, Output = T> + Mul<f32, Output = T>,
 {
-    a * (1f64 - t) + b * t
+    a * (1f32 - t) + b * t
 }
 
-pub fn bilerp<T>(a0: T, a1: T, b0: T, b1: T, s: f64, t: f64) -> T
+pub fn bilerp<T>(a0: T, a1: T, b0: T, b1: T, s: f32, t: f32) -> T
 where
-    T: Add<T, Output = T> + Mul<f64, Output = T>,
+    T: Add<T, Output = T> + Mul<f32, Output = T>,
 {
     let a = lerp(a0, a1, s);
     let b = lerp(b0, b1, s);
@@ -48,9 +48,9 @@ where
             z
     computes z by linear interpolation between x and y at parameter t
 */
-pub fn compute_triangular_scheme<T, const N: usize>(elements: &[T; N], t: f64) -> [T; triangular_number(N)]
+pub fn compute_triangular_scheme<T, const N: usize>(elements: &[T; N], t: f32) -> [T; triangular_number(N)]
 where
-    T: Copy + Add<T, Output = T> + Mul<f64, Output = T>,
+    T: Copy + Add<T, Output = T> + Mul<f32, Output = T>,
     [(); triangular_number(N)]:,
 {
     let mut row_len = N;

@@ -2,7 +2,7 @@ use std::ops::{Add, Mul};
 
 pub struct BezierCurve<T, const N: usize>
 where
-    T: Copy + Add<T, Output = T> + Mul<f64, Output = T>,
+    T: Copy + Add<T, Output = T> + Mul<f32, Output = T>,
     [(); N + 1]:,
 {
     points: [T; N + 1],
@@ -10,16 +10,16 @@ where
 
 impl<T, const N: usize> BezierCurve<T, N>
 where
-    T: Copy + Add<T, Output = T> + Mul<f64, Output = T>,
+    T: Copy + Add<T, Output = T> + Mul<f32, Output = T>,
     [(); N + 1]:,
 {
     pub fn new(points: [T; N + 1]) -> Self {
         BezierCurve { points: points }
     }
-    fn evaluate(&self, t: f64) -> T {
+    fn evaluate(&self, t: f32) -> T {
         unimplemented!()
     }
-    fn subdivide(&self, t: f64) -> (Self, Self) {
+    fn subdivide(&self, t: f32) -> (Self, Self) {
         unimplemented!()
     }
 }
@@ -27,7 +27,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bevy::math::f64::DVec3 as Vec3;
+    use bevy::prelude::Vec3;
 
     #[test]
     fn initialization() {

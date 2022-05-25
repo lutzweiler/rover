@@ -1,4 +1,4 @@
-use bevy::math::f64::DVec3 as Vec3;
+use bevy::prelude::Vec3;
 use std::ops::{Add, Mul};
 use Vec3 as Color;
 
@@ -7,7 +7,7 @@ use crate::triangle::Triangle;
 
 pub struct BezierTriangle<T, const N: usize>
 where
-    T: Copy + Add<T, Output = T> + Mul<f64, Output = T>,
+    T: Copy + Add<T, Output = T> + Mul<f32, Output = T>,
     [(); math::triangular_number(N + 1)]:,
 {
     points: [T; math::triangular_number(N + 1)],
@@ -16,7 +16,7 @@ where
 
 impl<T, const N: usize> BezierTriangle<T, N>
 where
-    T: Copy + Add<T, Output = T> + Mul<f64, Output = T>,
+    T: Copy + Add<T, Output = T> + Mul<f32, Output = T>,
     [(); math::triangular_number(N + 1)]:,
 {
     pub fn new(points: [T; math::triangular_number(N + 1)], colors: [Color; 3]) -> Self {
@@ -25,13 +25,13 @@ where
             colors: colors,
         }
     }
-    fn evaluate(&self, u: f64, v: f64) -> T {
+    fn evaluate(&self, u: f32, v: f32) -> T {
         unimplemented!()
     }
-    pub fn subdivide(&self, u: f64, v: f64) -> (Self, Self) {
+    pub fn subdivide(&self, u: f32, v: f32) -> (Self, Self) {
         unimplemented!()
     }
-    fn triangulate(&self, max_curveature: f64, max_triangles: u32) -> Vec<Triangle<T>> {
+    fn triangulate(&self, max_curveature: f32, max_triangles: u32) -> Vec<Triangle<T>> {
         unimplemented!()
     }
 }

@@ -1,4 +1,4 @@
-use bevy::math::f64::DVec3 as Vec3;
+use bevy::prelude::Vec3;
 use std::ops::{Add, Mul};
 use Vec3 as Color;
 
@@ -30,7 +30,7 @@ pub trait FromString {
 #[derive(Debug)]
 pub struct BezierRectangle<T, const N: usize, const M: usize>
 where
-    T: Copy + Add<T, Output = T> + Mul<f64, Output = T>,
+    T: Copy + Add<T, Output = T> + Mul<f32, Output = T>,
     [(); (N + 1) * (M + 1)]:,
 {
     points: [T; (N + 1) * (M + 1)],
@@ -39,7 +39,7 @@ where
 
 impl<T, const N: usize, const M: usize> BezierRectangle<T, N, M>
 where
-    T: Copy + Add<T, Output = T> + Mul<f64, Output = T> + std::fmt::Debug,
+    T: Copy + Add<T, Output = T> + Mul<f32, Output = T> + std::fmt::Debug,
     [(); (N + 1) * (M + 1)]:,
 {
     pub fn new(points: [T; (N + 1) * (M + 1)], colors: [Color; 4]) -> Self {
@@ -49,7 +49,7 @@ where
         }
     }
 
-    fn evaluate(&self, u: f64, v: f64) -> T {
+    fn evaluate(&self, u: f32, v: f32) -> T {
         unimplemented!()
     }
 
@@ -65,7 +65,7 @@ where
         vec![tl, bl, tr, br]
     }
 
-    pub fn subdivide(&self, axis: math::Axis2D, t: f64) -> (Self, Self)
+    pub fn subdivide(&self, axis: math::Axis2D, t: f32) -> (Self, Self)
     where
         [(); math::triangular_number(N + 1)]:,
         [(); math::triangular_number(M + 1)]:,
@@ -76,11 +76,11 @@ where
         }
     }
 
-    fn triangulate(&self, max_curveature: f64, max_triangles: u32) -> Vec<Triangle<T>> {
+    fn triangulate(&self, max_curveature: f32, max_triangles: u32) -> Vec<Triangle<T>> {
         unimplemented!()
     }
 
-    fn subdivide_u(&self, t: f64) -> (Self, Self)
+    fn subdivide_u(&self, t: f32) -> (Self, Self)
     where
         [(); math::triangular_number(N + 1)]:,
     {
@@ -130,7 +130,7 @@ where
         )
     }
 
-    fn subdivide_v(&self, t: f64) -> (Self, Self)
+    fn subdivide_v(&self, t: f32) -> (Self, Self)
     where
         [(); math::triangular_number(M + 1)]:,
     {
@@ -242,17 +242,17 @@ where
             let mut value = Vec3::new(0., 0., 0.);
             let mut line_iter = line.split_whitespace();
             if let Some(x) = line_iter.next() {
-                value.x = x.parse::<f64>().unwrap();
+                value.x = x.parse::<f32>().unwrap();
             } else {
                 return Err(format!("missing vector element"));
             }
             if let Some(y) = line_iter.next() {
-                value.y = y.parse::<f64>().unwrap();
+                value.y = y.parse::<f32>().unwrap();
             } else {
                 return Err(format!("missing vector element"));
             }
             if let Some(z) = line_iter.next() {
-                value.z = z.parse::<f64>().unwrap();
+                value.z = z.parse::<f32>().unwrap();
             } else {
                 return Err(format!("missing vector element"));
             }
@@ -275,7 +275,7 @@ where
 
 impl<T, const N: usize, const M: usize> Subdivide for BezierRectangle<T, N, M>
 where
-    T: Copy + Add<T, Output = T> + Mul<f64, Output = T> + std::fmt::Debug,
+    T: Copy + Add<T, Output = T> + Mul<f32, Output = T> + std::fmt::Debug,
     [(); (N + 1) * (M + 1)]:,
     [(); math::triangular_number(N + 1)]:,
     [(); math::triangular_number(M + 1)]:,
@@ -290,7 +290,7 @@ mod tests {
     use super::*;
     use std::time::{Duration, Instant};
 
-    fn example_bezier_rectangle() -> BezierRectangle<f64, 3, 2> {
+    fn example_bezier_rectangle() -> BezierRectangle<f32, 3, 2> {
         let pts = [4., 0., 4., 0., 4., 0., 4., 4., 4., 0., 0., 4.];
         let four_colors = [
             Color::new(1., 0., 0.),
@@ -302,7 +302,7 @@ mod tests {
         r
     }
 
-    fn example_bezier_rectangle_2() -> BezierRectangle<f64, 3, 3> {
+    fn example_bezier_rectangle_2() -> BezierRectangle<f32, 3, 3> {
         let pts = [4., 0., 4., 0., 4., 0., 4., 4., 4., 0., 0., 4., 2., 2., 0., 0.];
         let four_colors = [
             Color::new(1., 0., 0.),
@@ -451,7 +451,7 @@ mod tests {
             }
         }
         let transposed_points = transposed_points;
-        let transposed = BezierRectangle::<f64, 3, 3>::new(transposed_points, surf.colors);
+        let transposed = BezierRectangle::<f32, 3, 3>::new(transposed_points, surf.colors);
         let (t, b) = transposed.subdivide(math::Axis2D::V, 0.5);
         let mut top_retransposed = [0.; 16];
         let mut bot_retransposed = [0.; 16];
@@ -526,7 +526,7 @@ mod tests {
             }
             let len = new_vec.len();
             let nanos = now.elapsed().as_nanos();
-            let secs = nanos as f64 / 1_000_000_000f64;
+            let secs = nanos as f32 / 1_000_000_000f64;
             let per_surf = nanos / len as u128;
             println!(
                 "Computing {} surfaces took {} seconds, that is {} ns per surface",
