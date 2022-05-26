@@ -112,16 +112,16 @@ where
         //calculate the new colors
         let mut colors_left = [Color::new(0., 0., 0.); 4];
         let mut colors_right = [Color::new(0., 0., 0.); 4];
+        let new_color_top = math::lerp(self.colors[0], self.colors[2], t);
+        let new_color_bot = math::lerp(self.colors[1], self.colors[3], t);
         colors_left[0] = self.colors[0];
-        colors_left[2] = self.colors[2];
-        colors_right[1] = self.colors[1];
-        colors_right[3] = self.colors[3];
-        let new_color_top = math::lerp(self.colors[0], self.colors[1], t);
-        let new_color_bot = math::lerp(self.colors[2], self.colors[3], t);
-        colors_left[1] = new_color_top;
+        colors_left[1] = self.colors[1];
+        colors_left[2] = new_color_top;
         colors_left[3] = new_color_bot;
         colors_right[0] = new_color_top;
-        colors_right[2] = new_color_bot;
+        colors_right[1] = new_color_bot;
+        colors_right[2] = self.colors[2];
+        colors_right[3] = self.colors[3];
 
         //assemble everything into new patches
         (
@@ -164,16 +164,16 @@ where
         //calculate the new colors
         let mut colors_top = [Color::new(0., 0., 0.); 4];
         let mut colors_bot = [Color::new(0., 0., 0.); 4];
+        let new_color_left = math::lerp(self.colors[0], self.colors[1], t);
+        let new_color_right = math::lerp(self.colors[2], self.colors[3], t);
         colors_top[0] = self.colors[0];
-        colors_top[1] = self.colors[1];
-        colors_bot[2] = self.colors[2];
-        colors_bot[3] = self.colors[3];
-        let new_color_left = math::lerp(self.colors[0], self.colors[2], t);
-        let new_color_right = math::lerp(self.colors[1], self.colors[3], t);
-        colors_top[2] = new_color_left;
+        colors_top[1] = new_color_left;
+        colors_top[2] = self.colors[2];
         colors_top[3] = new_color_right;
         colors_bot[0] = new_color_left;
-        colors_bot[1] = new_color_right;
+        colors_bot[1] = self.colors[1];
+        colors_bot[2] = new_color_right;
+        colors_bot[3] = self.colors[3];
 
         //assemble everything into new patches
         (
@@ -187,15 +187,16 @@ impl<const N: usize, const M: usize> BezierRectangle<Vec3, N, M>
 where
     [(); (N + 1) * (M + 1)]:,
 {
+    #[allow(unused_parens)]
     fn corner_normals(&self) -> (Vec3, Vec3, Vec3, Vec3) {
-        let b00u = self.points[0 * (N + 1) + 1] - self.points[0 * (N + 1) + 0];
-        let b00v = self.points[1 * (N + 1) + 0] - self.points[0 * (N + 1) + 0];
-        let b10u = self.points[0 * (N + 1) + N - 1] - self.points[0 * (N + 1) + N];
-        let b10v = self.points[1 * (N + 1) + N] - self.points[0 * (N + 1) + N];
-        let b01u = self.points[M * (N + 1) + 1] - self.points[M * (N + 1) + 0];
-        let b01v = self.points[(M - 1) * (N + 1) + 0] - self.points[M * (N + 1) + 0];
-        let b11u = self.points[M * (N + 1) + N - 1] - self.points[M * (N + 1) + N];
-        let b11v = self.points[(M - 1) * (N + 1) + N] - self.points[M * (N + 1) + N];
+        let b00u =   (self.points[0 * (N + 1) + 1] - self.points[0 * (N + 1) + 0]);
+        let b00v =   (self.points[1 * (N + 1) + 0] - self.points[0 * (N + 1) + 0]);
+        let b10u = - (self.points[0 * (N + 1) + N - 1] - self.points[0 * (N + 1) + N]);
+        let b10v =   (self.points[1 * (N + 1) + N] - self.points[0 * (N + 1) + N]);
+        let b01u =   (self.points[M * (N + 1) + 1] - self.points[M * (N + 1) + 0]);
+        let b01v = - (self.points[(M - 1) * (N + 1) + 0] - self.points[M * (N + 1) + 0]);
+        let b11u = - (self.points[M * (N + 1) + N - 1] - self.points[M * (N + 1) + N]);
+        let b11v = - (self.points[(M - 1) * (N + 1) + N] - self.points[M * (N + 1) + N]);
         let n00 = b00u.cross(b00v).normalize_or_zero();
         let n10 = b10u.cross(b10v).normalize_or_zero();
         let n01 = b01u.cross(b01v).normalize_or_zero();
@@ -218,12 +219,12 @@ where
         let t1 = Triangle::new(
             [v00, v10, v01],
             [self.colors[0], self.colors[1], self.colors[2]],
-            [n0, n1, n2],
+            [n0, n2, n1],
         );
         let t2 = Triangle::new(
             [v10, v11, v01],
             [self.colors[1], self.colors[3], self.colors[2]],
-            [n1, n3, n2],
+            [n2, n3, n1],
         );
         vec![t1, t2]
     }
