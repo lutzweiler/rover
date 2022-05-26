@@ -30,10 +30,12 @@
 mod bezier;
 mod math;
 mod triangle;
+mod subdivision;
 
 //use bevy::math::f64::DVec3 as Vec3;
-use bezier::rectangle::BezierRectangle;
-use bezier::rectangle::FromString;
+use bezier::rectangle::{BezierRectangle, FromString};
+use subdivision::SubdivisionSet;
+use triangle::{ToTriangle, Triangle};
 
 use bevy::{
     prelude::*,
@@ -44,7 +46,6 @@ use bevy::{
     pbr::wireframe::{WireframeConfig, WireframePlugin},
 
 };
-//use bevy_flycam::{PlayerPlugin};
 //use bevy_fly_camera::{FlyCamera, FlyCameraPlugin};
 mod bevy_fly_camera;
 
@@ -52,7 +53,6 @@ fn main() {
     App::new()
         .insert_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
-        //.add_plugin(PlayerPlugin)
         .add_startup_system(setup)
         .add_plugin(bevy_fly_camera::lib::FlyCameraPlugin)
         .run();
@@ -75,47 +75,93 @@ fn example_mesh() -> Mesh {
     return mesh;
 }
 
+fn example_surface() -> Mesh {
+    let example_cbez333 = "0. 0. 0.
+        1. 0. 1.
+        2. 0. 2.
+        3. 0. 3.
+        0. 1. 0.
+        1. 1. 2.
+        2. 1. 2.
+        3. 1. 4.
+        0. 2 1.
+        1. 2. 1.
+        2. 2. 4.
+        3. 2. 5.
+        0. 3. 1.
+        1. 3. 0.
+        2. 3. 7.
+        3. 3. 6.
+        1. 0. 0.
+        0. 1. 0.
+        0. 0. 1.
+        1. 1. 1.";
+    let s = BezierRectangle::<Vec3,3,3>::from_string(example_cbez333).unwrap();
+    let mut surfaces = SubdivisionSet::<BezierRectangle<Vec3,3,3>>::new();
+    surfaces.elements.push(s);
+    surfaces.subdivide();
+    let triangles = surfaces.to_triangles();
+    
+    /*
+    let (a,b) = s.subdivide(math::Axis2D::U, 0.5);
+    let mut triangles = vec![];
+    triangles.append(&mut a.to_triangles());
+    triangles.append(&mut b.to_triangles());
+    for t in &triangles {
+        println!("{:?}", t);
+    }
+    */
+    
+    Triangle::triangle_list_to_mesh(triangles)
+}
+
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>
 ) {
-    let mesh = example_mesh();
+    let mesh = example_surface();
     let mut triangle_material = StandardMaterial::default();
+    triangle_material.metallic = 0.;
+    triangle_material.reflectance = 0.0;
     triangle_material.cull_mode = None;
     triangle_material.base_color = Color::WHITE; //lets 100% of vertex colors through
     triangle_material.double_sided = false; //for lighting on backside not sure which is right
     commands.spawn_bundle(PbrBundle {
         mesh: meshes.add(mesh),
         material: materials.add(triangle_material),
-        transform: Transform::from_xyz(0.0, 0.5, 0.0),
+        transform: Transform::from_xyz(0.0, 0.0, 0.0),
         ..default()
     });
     // cube
     commands.spawn_bundle(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+        mesh: meshes.add(Mesh::from(shape::Cube { size: 0.2 })),
         material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
-        transform: Transform::from_xyz(0.0, 0.5, -1.5),
         ..default()
     });
     
-    // light
-    commands.spawn_bundle(PointLightBundle {
-        point_light: PointLight {
-            intensity: 1500.0,
-            shadows_enabled: true,
-            ..default()
-        },
-        transform: Transform::from_xyz(4.0, 8.0, 4.0),
-        ..default()
+    //light
+    //commands.spawn_bundle(PointLightBundle {
+    //    point_light: PointLight {
+    //        intensity: 1500.0,
+    //        shadows_enabled: true,
+    //        ..default()
+    //    },
+    //    transform: Transform::from_xyz(4.0, 8.0, 4.0),
+    //    ..default()
+    //});
+    commands.insert_resource(AmbientLight {
+        color: Color::WHITE,
+        brightness: 0.8,
     });
     commands
         .spawn()
         .insert_bundle(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
+            transform: Transform::from_xyz(1.5, 1.5, 12.0).looking_at(Vec3::ZERO, Vec3::Y),
             ..Default::default()
         })
         .insert(bevy_fly_camera::lib::FlyCamera::default());
+    
 
 }
 
