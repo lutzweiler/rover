@@ -32,11 +32,12 @@ mod math;
 mod triangle;
 mod subdivision;
 
-//use bevy::math::f64::DVec3 as Vec3;
+//use bevy_fly_camera::{FlyCamera, FlyCameraPlugin};
+mod bevy_fly_camera;
+
 use bezier::rectangle::{BezierRectangle, FromString};
 use subdivision::SubdivisionSet;
 use triangle::{ToTriangle, Triangle};
-
 use bevy::{
     prelude::*,
     render::{
@@ -46,8 +47,6 @@ use bevy::{
     pbr::wireframe::{WireframeConfig, WireframePlugin},
 
 };
-//use bevy_fly_camera::{FlyCamera, FlyCameraPlugin};
-mod bevy_fly_camera;
 
 fn main() {
     App::new()

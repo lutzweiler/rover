@@ -1,20 +1,24 @@
-use crate::triangle::{ToTriangle, Triangle};
 use crate::bezier::rectangle::BezierRectangle;
-use bevy::prelude::Vec3;
 use crate::math;
+use crate::triangle::{ToTriangle, Triangle};
+use bevy::prelude::Vec3;
 
 pub trait Subdivide {
-    fn subdivide(&self) -> Vec<Self> where Self: Sized;
+    fn subdivide(&self) -> Vec<Self>
+    where
+        Self: Sized;
 }
 
 pub struct SubdivisionSet<T>
-    where T: Subdivide
+where
+    T: Subdivide,
 {
     pub elements: Vec<T>,
 }
 
 impl<T> SubdivisionSet<T>
-    where T: Subdivide 
+where
+    T: Subdivide,
 {
     pub fn new() -> Self {
         SubdivisionSet {
@@ -32,17 +36,17 @@ impl<T> SubdivisionSet<T>
             }
             self.elements = new_elements;
         }
-   }
+    }
 }
 
 //what we really want to do is implement ToTriangle for a type that has
 //a vector part Vec3, but that would require additional generic parameter for these types
 //this means this block needs to be copied for BezierTriangles and BezierCurves
-impl<const N: usize, const M:usize> ToTriangle for SubdivisionSet<BezierRectangle<Vec3,N,M>>
+impl<const N: usize, const M: usize> ToTriangle for SubdivisionSet<BezierRectangle<Vec3, N, M>>
 where
     [(); (N + 1) * (M + 1)]:,
-        [(); math::triangular_number(N + 1)]:,
-        [(); math::triangular_number(M + 1)]:,
+    [(); math::triangular_number(N + 1)]:,
+    [(); math::triangular_number(M + 1)]:,
 {
     fn to_triangles(&self) -> Vec<Triangle<Vec3>> {
         let mut triangles = Vec::<Triangle<Vec3>>::new();

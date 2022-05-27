@@ -3,8 +3,8 @@ use std::ops::{Add, Mul};
 use Vec3 as Color;
 
 use crate::math;
-use crate::triangle::{Triangle, ToTriangle};
 use crate::subdivision::Subdivide;
+use crate::triangle::{ToTriangle, Triangle};
 
 pub trait FromString {
     fn from_string(lines: &str) -> Result<Self, String>
@@ -189,21 +189,20 @@ where
 {
     #[allow(unused_parens)]
     fn corner_normals(&self) -> (Vec3, Vec3, Vec3, Vec3) {
-        let b00u =   (self.points[0 * (N + 1) + 1] - self.points[0 * (N + 1) + 0]);
-        let b00v =   (self.points[1 * (N + 1) + 0] - self.points[0 * (N + 1) + 0]);
-        let b10u = - (self.points[0 * (N + 1) + N - 1] - self.points[0 * (N + 1) + N]);
-        let b10v =   (self.points[1 * (N + 1) + N] - self.points[0 * (N + 1) + N]);
-        let b01u =   (self.points[M * (N + 1) + 1] - self.points[M * (N + 1) + 0]);
-        let b01v = - (self.points[(M - 1) * (N + 1) + 0] - self.points[M * (N + 1) + 0]);
-        let b11u = - (self.points[M * (N + 1) + N - 1] - self.points[M * (N + 1) + N]);
-        let b11v = - (self.points[(M - 1) * (N + 1) + N] - self.points[M * (N + 1) + N]);
+        let b00u = (self.points[0 * (N + 1) + 1] - self.points[0 * (N + 1) + 0]);
+        let b00v = (self.points[1 * (N + 1) + 0] - self.points[0 * (N + 1) + 0]);
+        let b10u = -(self.points[0 * (N + 1) + N - 1] - self.points[0 * (N + 1) + N]);
+        let b10v = (self.points[1 * (N + 1) + N] - self.points[0 * (N + 1) + N]);
+        let b01u = (self.points[M * (N + 1) + 1] - self.points[M * (N + 1) + 0]);
+        let b01v = -(self.points[(M - 1) * (N + 1) + 0] - self.points[M * (N + 1) + 0]);
+        let b11u = -(self.points[M * (N + 1) + N - 1] - self.points[M * (N + 1) + N]);
+        let b11v = -(self.points[(M - 1) * (N + 1) + N] - self.points[M * (N + 1) + N]);
         let n00 = b00u.cross(b00v).normalize_or_zero();
         let n10 = b10u.cross(b10v).normalize_or_zero();
         let n01 = b01u.cross(b01v).normalize_or_zero();
         let n11 = b11u.cross(b11v).normalize_or_zero();
         (n00, n10, n01, n11)
     }
-
 }
 
 impl<const N: usize, const M: usize> ToTriangle for BezierRectangle<Vec3, N, M>
