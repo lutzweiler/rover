@@ -36,11 +36,35 @@ mod triangle;
 //use bevy_fly_camera::{FlyCamera, FlyCameraPlugin};
 mod bevy_fly_camera;
 
+use std::path::Path;
 use bevy::prelude::*;
+use clap::Parser;
+
+#[derive(Parser)]
+#[clap(version, about, long_about = None)]
+struct Args {
+    #[clap(parse(try_from_str=file_exists))]
+    path: String,
+}
+
+impl FromWorld for Args {
+    fn from_world(world: &mut World) -> Self {
+        Args::parse()
+    }
+}
+
+fn file_exists(path: &str) -> Result<String, String> {
+    if Path::new(path).exists() {
+        Ok(path.to_string())
+    } else {
+        Err("File not found".to_string())
+    }
+}
 
 fn main() {
     App::new()
         .insert_resource(Msaa { samples: 4 })
+        .init_resource::<Args>()
         .add_plugins(DefaultPlugins)
         .add_startup_system(scene_setup)
         .add_startup_system(load_objects)
@@ -48,16 +72,19 @@ fn main() {
         .run();
 }
 
-fn get_meshes() -> Vec<Mesh> {
-    example_file()
-}
-
 fn load_objects(
+    args: Res<Args>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let my_meshes = get_meshes();
+    let my_meshes = match builder::parse_file(&args.path) {
+        Ok(m) => m,
+        Err(e) => {
+            println!("An error occured while parsing the input file");
+            panic!();
+        }
+    };
     for mesh in my_meshes {
         let mut triangle_material = StandardMaterial::default();
         triangle_material.metallic = 0.;
@@ -88,10 +115,3 @@ fn scene_setup(mut commands: Commands, meshes: ResMut<Assets<Mesh>>, materials: 
         })
         .insert(bevy_fly_camera::lib::FlyCamera::default());
 }
-
-fn example_file() -> Vec<Mesh> {
-    builder::parse_file("example_cbez333.off").unwrap()
-}
-
-#[cfg(test)]
-mod tests {}
