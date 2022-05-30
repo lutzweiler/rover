@@ -27,7 +27,10 @@ where
     }
 
     pub fn subdivide(&mut self) {
-        let limit = 1000; //finishes one subdivision run after limit is reached, possibly much larger
+        if self.elements.len() == 0 {
+            return;
+        }
+        let limit = 5000; //finishes one subdivision run after limit is reached, possibly much larger
         while self.elements.len() < limit {
             let mut new_elements = Vec::<T>::new();
             for e in &self.elements {
