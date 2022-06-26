@@ -30,6 +30,61 @@ where
             normals: n,
         }
     }
+
+    pub fn from_string(positions: [&String; 3], colors: [Color; 3]) -> Option<Self> {
+        let positions = [Vec3::new(); 3];
+        let mut i = 0;
+        for string in positions {
+            let mut value = Vec3::new(0., 0., 0.);
+            let mut line_iter = string.split_whitespace();
+            if let Some(x) = line_iter.next() {
+                value.x = x.parse::<f32>().unwrap();
+            } else {
+                return Err(format!("missing vector element"));
+            }
+            if let Some(y) = line_iter.next() {
+                value.y = y.parse::<f32>().unwrap();
+            } else {
+                return Err(format!("missing vector element"));
+            }
+            if let Some(z) = line_iter.next() {
+                value.z = z.parse::<f32>().unwrap();
+            } else {
+                return Err(format!("missing vector element"));
+            }
+            positions[i] = value;
+            i += 1;
+        }
+        Ok(Triangle::new(positions, colors))
+
+    }
+
+    pub fn from_string_with_color(values: [&String; 6]) -> Option<Self> {
+        let colors = [Color::new(); 3];
+        let mut i = 0;
+        for string in values[3..6] {
+            let mut value = Vec3::new(0., 0., 0.);
+            let mut line_iter = string.split_whitespace();
+            if let Some(x) = line_iter.next() {
+                value.x = x.parse::<f32>().unwrap();
+            } else {
+                return Err(format!("missing vector element"));
+            }
+            if let Some(y) = line_iter.next() {
+                value.y = y.parse::<f32>().unwrap();
+            } else {
+                return Err(format!("missing vector element"));
+            }
+            if let Some(z) = line_iter.next() {
+                value.z = z.parse::<f32>().unwrap();
+            } else {
+                return Err(format!("missing vector element"));
+            }
+            colors[i] = value;
+            i += 1;
+        }
+        Self::from_string(values[0..3], colors);
+    }
 }
 
 impl Triangle<Vec3> {
