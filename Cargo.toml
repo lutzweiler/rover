@@ -10,7 +10,7 @@ description = "a simple tool for visualizing bezier surfaces"
 clap = { version = "3.1.18", features = ["derive"] }
 #bevy 0.7 does not support per vertex coloring, but pre-release git version does
 #bevy = "0.7"
-bevy = {git = "https://github.com/bevyengine/bevy"}
+bevy = {git = "https://github.com/bevyengine/bevy", rev="27c321e33f1e7420b909b1a4697de4c0aee6d06b"}
 
 #we want to use bevy_fly_camera, which is incompatible with bevy 0.7 or newer
 #bevy_fly_camera = {git = "https://github.com/PikminGuts92/bevy_fly_camera", branch = "bevy-0.7"}
