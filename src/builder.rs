@@ -59,7 +59,7 @@ struct MeshBuilder {
     strings: [String; 4],
     objects: (
         (),
-        Vec<Triangle<f32>>,
+        Vec<Triangle<Vec3>>,
         Vec<BezierRectangle<Vec3, 3, 3>>,
         Vec<BezierRectangle<Vec3, 4, 4>>,
     ),
@@ -71,7 +71,7 @@ impl MeshBuilder {
             strings: [String::new(), String::new(), String::new(), String::new()],
             objects: (
                 (),
-                Vec::<Triangle<f32>>::new(),
+                Vec::<Triangle<Vec3>>::new(),
                 Vec::<BezierRectangle<Vec3, 3, 3>>::new(),
                 Vec::<BezierRectangle<Vec3, 4, 4>>::new(),
             ),
@@ -83,6 +83,30 @@ impl MeshBuilder {
         //do nothing
 
         //Triangles
+        let mut line_iter = self.strings[1].lines();
+        let first_line = line_iter.next().unwrap();
+        let num_vertices = first_line.split_whitespace().next().unwrap().parse::<usize>().unwrap();
+        let lines: Vec<&str> = line_iter.collect();
+        'line: for line in &lines[num_vertices..] {
+            let mut line_iter = line.split_whitespace();
+            if line_iter.next().unwrap() != "3" {
+                continue 'line;
+            }
+            let positions: Vec<String> = line_iter
+                .map(|s| s.parse::<usize>().unwrap())
+                .map(|i| lines[i])
+                .map(|s| s.to_string())
+                .collect();
+            if positions.len() == 3 {
+                let triangle = Triangle::from_string([&positions[0], &positions[1], &positions[2]]);
+                match triangle {
+                    Ok(t) => {
+                        self.objects.1.push(t);
+                    }
+                    _ => (),
+                }
+            }
+        }
 
         //Rect33
         let mut input = String::new();
@@ -120,6 +144,9 @@ impl MeshBuilder {
         let mut meshes = Vec::<Mesh>::new();
         //None
         //do nothing
+
+        //Triangle
+        meshes.push(Triangle::triangle_list_to_mesh(self.objects.1));
 
         //Rect33
         let mut subdiv = SubdivisionSet::new();

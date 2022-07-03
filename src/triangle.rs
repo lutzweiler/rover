@@ -68,7 +68,6 @@ impl Triangle<Vec3> {
     }
 
     pub fn from_string_without_color(lines: [&String; 3], colors: [Color; 3]) -> Result<Self, String> {
-        println!("without color");
         let mut positions = [Vec3::new(0., 0., 0.); 3];
         let mut i = 0;
         for string in lines.into_iter() {
@@ -96,7 +95,6 @@ impl Triangle<Vec3> {
     }
 
     pub fn from_string_with_color(values: [&String; 3]) -> Result<Self, String> {
-        println!("with color");
         let mut colors = [Color::new(0., 0., 0.); 3];
         let mut i = 0;
         for string in values {
