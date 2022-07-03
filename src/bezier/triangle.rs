@@ -31,9 +31,6 @@ where
     pub fn subdivide(&self, u: f32, v: f32) -> (Self, Self) {
         unimplemented!()
     }
-    fn triangulate(&self, max_curveature: f32, max_triangles: u32) -> Vec<Triangle<T>> {
-        unimplemented!()
-    }
 }
 
 #[cfg(test)]
