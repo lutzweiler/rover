@@ -79,10 +79,48 @@ impl MeshBuilder {
     }
 
     fn build_objects(&mut self) {
-        //None
-        //do nothing
+        {&mut self.build_triangles()};
+        {&mut self.build_rect33()};
+        {&mut self.build_rect44()};
+    }
 
-        //Triangles
+    fn build_rect33(&mut self) {
+        let mut input = String::new();
+        let mut i = 0;
+        for line in self.strings[2].lines() {
+            i += 1;
+            input.push_str(&line);
+            input.push_str("\n");
+            if i == line_length(OffType::Rect33) {
+                if let Ok(surf) = BezierRectangle::<Vec3, 3, 3>::from_string(&input) {
+                    self.objects.2.push(surf);
+                }
+                input.clear();
+                i = 0;
+            }
+        }
+    }
+
+    fn build_rect44(&mut self) {
+        let mut input = String::new();
+        let mut i = 0;
+        for line in self.strings[3].lines() {
+            i += 1;
+            input.push_str(&line);
+            if i == line_length(OffType::Rect44) {
+                if let Ok(surf) = BezierRectangle::<Vec3, 4, 4>::from_string(&input) {
+                    self.objects.3.push(surf);
+                }
+                input.clear();
+                i = 0;
+            }
+        }
+    }
+
+    fn build_triangles(&mut self) {
+        if self.strings[1].is_empty() {
+            return;
+        }
         let mut line_iter = self.strings[1].lines();
         let first_line = line_iter.next().unwrap();
         let num_vertices = first_line.split_whitespace().next().unwrap().parse::<usize>().unwrap();
@@ -108,36 +146,6 @@ impl MeshBuilder {
             }
         }
 
-        //Rect33
-        let mut input = String::new();
-        let mut i = 0;
-        for line in self.strings[2].lines() {
-            i += 1;
-            input.push_str(&line);
-            input.push_str("\n");
-            if i == line_length(OffType::Rect33) {
-                if let Ok(surf) = BezierRectangle::<Vec3, 3, 3>::from_string(&input) {
-                    self.objects.2.push(surf);
-                }
-                input.clear();
-                i = 0;
-            }
-        }
-
-        //Rect44
-        let mut input = String::new();
-        let mut i = 0;
-        for line in self.strings[3].lines() {
-            i += 1;
-            input.push_str(&line);
-            if i == line_length(OffType::Rect44) {
-                if let Ok(surf) = BezierRectangle::<Vec3, 4, 4>::from_string(&input) {
-                    self.objects.3.push(surf);
-                }
-                input.clear();
-                i = 0;
-            }
-        }
     }
 
     fn build_meshes(self) -> Vec<Mesh> {
