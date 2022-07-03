@@ -76,10 +76,6 @@ where
         }
     }
 
-    fn triangulate(&self, max_curveature: f32, max_triangles: u32) -> Vec<Triangle<T>> {
-        unimplemented!()
-    }
-
     fn subdivide_u(&self, t: f32) -> (Self, Self)
     where
         [(); math::triangular_number(N + 1)]:,
@@ -215,12 +211,12 @@ where
         let v10 = self.points[M * (N + 1)];
         let v11 = self.points[M * (N + 1) + M];
         let (n0, n1, n2, n3) = self.corner_normals();
-        let t1 = Triangle::new(
+        let t1 = Triangle::new_with_normals(
             [v00, v10, v01],
             [self.colors[0], self.colors[1], self.colors[2]],
             [n0, n2, n1],
         );
-        let t2 = Triangle::new(
+        let t2 = Triangle::new_with_normals(
             [v10, v11, v01],
             [self.colors[1], self.colors[3], self.colors[2]],
             [n2, n3, n1],

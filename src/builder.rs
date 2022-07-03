@@ -57,13 +57,18 @@ fn match_line_type(line: &String) -> LineType {
 
 struct MeshBuilder {
     strings: [String; 4],
-    objects: ((), Vec<Triangle<f32>>, Vec<BezierRectangle<Vec3, 3, 3>>, Vec<BezierRectangle<Vec3, 4, 4>>),
+    objects: (
+        (),
+        Vec<Triangle<f32>>,
+        Vec<BezierRectangle<Vec3, 3, 3>>,
+        Vec<BezierRectangle<Vec3, 4, 4>>,
+    ),
 }
 
 impl MeshBuilder {
     fn new() -> Self {
         MeshBuilder {
-            strings: [String::new(), String::new(), String::new()],
+            strings: [String::new(), String::new(), String::new(), String::new()],
             objects: (
                 (),
                 Vec::<Triangle<f32>>::new(),
@@ -78,7 +83,6 @@ impl MeshBuilder {
         //do nothing
 
         //Triangles
-        
 
         //Rect33
         let mut input = String::new();
