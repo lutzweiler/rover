@@ -6,12 +6,12 @@ http://www.geomview.org/docs/html/OFF.html) representation
 On Linux or Windows you can download the executable from the **Releases** section in the sidebar
 
 Alternatively you can build the application yourself:  
-- Install the [Rust](https://www.rust-lang.org/)
+- Install the [Rust toolchain] (https://www.rust-lang.org/)
 - On Windows, install the [Visual C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
 - install the nightly version: `rustup install nightly`
 - clone this repository and open a terminal there
 - build the application: `cargo build --release`
-- view the example surface: `cargo run --release -- example_cbez333.off`
+- view the example surface: `cargo run --release -- example_files/cbez333.off`
 - optionally, move the executable from `rover/target/release/rover` to somewhere else
 
 ## Usage
@@ -22,4 +22,9 @@ Rotate the camera with the mouse
 Move the camera with `W` `A` `S` `D` as well as `Space` and `Shift` for vertical movement  
 
 ## Supported Primitives
-Currently only the colored bicubic bezier surface [CBEZ333](http://www.geomview.org/docs/html/BBP-and-BEZ.html#BBP-and-BEZ) is supported
+- colored bicubic bezier surface [CBEZ333](http://www.geomview.org/docs/html/BBP-and-BEZ.html#BBP-and-BEZ)
+- colored biquartic bezier surface [CBEZ443](http://www.geomview.org/docs/html/BBP-and-BEZ.html#BBP-and-BEZ)
+- triangles [OFF](http://www.geomview.org/docs/html/OFF.html#OFF)
+    - triangles for wich every vertex is supplied with color values will be be drawn with per-vertex coloring
+    - other triangles will get a default color
+    - always use the _OFF_ header keyword instead of _COFF_
