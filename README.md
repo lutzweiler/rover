@@ -18,8 +18,9 @@ Alternatively you can build the application yourself:
 call rover with an off file as the first argument  
 `rover example_cbez333.off`
 
-Rotate the camera with the mouse  
-Move the camera with `W` `A` `S` `D` as well as `Space` and `Shift` for vertical movement  
+Rotate the camera with the mouse.  
+Move the camera with `W` `A` `S` `D` as well as `Space` and `Shift` for vertical movement.  
+Quit the app with `Esc` or `Ctrl`+`Q`.  
 
 ## Supported Primitives
 - colored bicubic bezier surface [CBEZ333](http://www.geomview.org/docs/html/BBP-and-BEZ.html#BBP-and-BEZ)

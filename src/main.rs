@@ -36,9 +36,9 @@ mod triangle;
 //use bevy_fly_camera::{FlyCamera, FlyCameraPlugin};
 mod bevy_fly_camera;
 
-use std::path::Path;
-use bevy::prelude::*;
+use bevy::{app::AppExit, input::keyboard::KeyboardInput, prelude::*};
 use clap::Parser;
+use std::path::Path;
 
 #[derive(Parser)]
 #[clap(version, about, long_about = None)]
@@ -69,6 +69,7 @@ fn main() {
         .add_startup_system(scene_setup)
         .add_startup_system(load_objects)
         .add_plugin(bevy_fly_camera::lib::FlyCameraPlugin)
+        .add_system(app_exit)
         .run();
 }
 
@@ -114,4 +115,14 @@ fn scene_setup(mut commands: Commands, meshes: ResMut<Assets<Mesh>>, materials: 
             ..Default::default()
         })
         .insert(bevy_fly_camera::lib::FlyCamera::default());
+}
+
+fn app_exit(mut exit: EventWriter<AppExit>, input: Res<Input<KeyCode>>) {
+    let esc = input.any_pressed([KeyCode::Escape]);
+    let q = input.any_pressed([KeyCode::Q]);
+    let ctrl = input.any_pressed([KeyCode::LControl, KeyCode::RControl]);
+
+    if esc || ctrl && q {
+        exit.send(AppExit);
+    }
 }
