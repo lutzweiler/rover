@@ -24,6 +24,8 @@ enum LineType {
 enum OffType {
     None,
     Off,
+    Rect11,
+    Rect22,
     Rect33,
     Rect44,
 }
@@ -32,8 +34,10 @@ fn offtype_id(offtype: &OffType) -> usize {
     match offtype {
         OffType::None => 0,
         OffType::Off => 1,
-        OffType::Rect33 => 2,
-        OffType::Rect44 => 3,
+        OffType::Rect11 => 2,
+        OffType::Rect22 => 3,
+        OffType::Rect33 => 4,
+        OffType::Rect44 => 5,
     }
 }
 
@@ -41,6 +45,8 @@ fn line_length(offtype: OffType) -> usize {
     match offtype {
         OffType::None => 0,
         OffType::Off => 1,
+        OffType::Rect11 => 2 * 2 + 4,
+        OffType::Rect22 => 3 * 3 + 4,
         OffType::Rect33 => 4 * 4 + 4,
         OffType::Rect44 => 5 * 5 + 4,
     }
@@ -48,7 +54,9 @@ fn line_length(offtype: OffType) -> usize {
 
 fn match_line_type(line: &String) -> LineType {
     match line.as_str() {
-        "OFF" => LineType::Header(OffType::Off),
+        "OFF" | "COFF" => LineType::Header(OffType::Off),
+        "CBEZ113" => LineType::Header(OffType::Rect11),
+        "CBEZ223" => LineType::Header(OffType::Rect22),
         "CBEZ333" => LineType::Header(OffType::Rect33),
         "CBEZ443" => LineType::Header(OffType::Rect44),
         _ => LineType::Values,
@@ -56,10 +64,12 @@ fn match_line_type(line: &String) -> LineType {
 }
 
 struct MeshBuilder {
-    strings: [String; 4],
+    strings: [String; 6],
     objects: (
         (),
         Vec<Triangle<Vec3>>,
+        Vec<BezierRectangle<Vec3, 1, 1>>,
+        Vec<BezierRectangle<Vec3, 2, 2>>,
         Vec<BezierRectangle<Vec3, 3, 3>>,
         Vec<BezierRectangle<Vec3, 4, 4>>,
     ),
@@ -68,10 +78,12 @@ struct MeshBuilder {
 impl MeshBuilder {
     fn new() -> Self {
         MeshBuilder {
-            strings: [String::new(), String::new(), String::new(), String::new()],
+            strings: [String::new(), String::new(), String::new(), String::new(), String::new(), String::new()],
             objects: (
                 (),
                 Vec::<Triangle<Vec3>>::new(),
+                Vec::<BezierRectangle<Vec3, 1, 1>>::new(),
+                Vec::<BezierRectangle<Vec3, 2, 2>>::new(),
                 Vec::<BezierRectangle<Vec3, 3, 3>>::new(),
                 Vec::<BezierRectangle<Vec3, 4, 4>>::new(),
             ),
@@ -80,20 +92,55 @@ impl MeshBuilder {
 
     fn build_objects(&mut self) {
         {&mut self.build_triangles()};
+        {&mut self.build_rect11()};
+        {&mut self.build_rect22()};
         {&mut self.build_rect33()};
         {&mut self.build_rect44()};
     }
 
-    fn build_rect33(&mut self) {
+    fn build_rect11(&mut self) {
         let mut input = String::new();
         let mut i = 0;
         for line in self.strings[2].lines() {
             i += 1;
             input.push_str(&line);
             input.push_str("\n");
+            if i == line_length(OffType::Rect11) {
+                if let Ok(surf) = BezierRectangle::<Vec3, 1, 1>::from_string(&input) {
+                    self.objects.2.push(surf);
+                }
+                input.clear();
+                i = 0;
+            }
+        }
+    }
+
+    fn build_rect22(&mut self) {
+        let mut input = String::new();
+        let mut i = 0;
+        for line in self.strings[3].lines() {
+            i += 1;
+            input.push_str(&line);
+            input.push_str("\n");
+            if i == line_length(OffType::Rect22) {
+                if let Ok(surf) = BezierRectangle::<Vec3, 2, 2>::from_string(&input) {
+                    self.objects.3.push(surf);
+                }
+                input.clear();
+                i = 0;
+            }
+        }
+    }
+    fn build_rect33(&mut self) {
+        let mut input = String::new();
+        let mut i = 0;
+        for line in self.strings[4].lines() {
+            i += 1;
+            input.push_str(&line);
+            input.push_str("\n");
             if i == line_length(OffType::Rect33) {
                 if let Ok(surf) = BezierRectangle::<Vec3, 3, 3>::from_string(&input) {
-                    self.objects.2.push(surf);
+                    self.objects.4.push(surf);
                 }
                 input.clear();
                 i = 0;
@@ -104,12 +151,12 @@ impl MeshBuilder {
     fn build_rect44(&mut self) {
         let mut input = String::new();
         let mut i = 0;
-        for line in self.strings[3].lines() {
+        for line in self.strings[5].lines() {
             i += 1;
             input.push_str(&line);
             if i == line_length(OffType::Rect44) {
                 if let Ok(surf) = BezierRectangle::<Vec3, 4, 4>::from_string(&input) {
-                    self.objects.3.push(surf);
+                    self.objects.5.push(surf);
                 }
                 input.clear();
                 i = 0;
@@ -156,15 +203,26 @@ impl MeshBuilder {
         //Triangle
         meshes.push(Triangle::triangle_list_to_mesh(self.objects.1));
 
-        //Rect33
+        //Rect11
         let mut subdiv = SubdivisionSet::new();
         subdiv.elements = self.objects.2;
         subdiv.subdivide();
         meshes.push(Triangle::triangle_list_to_mesh(subdiv.to_triangles()));
 
-        //Rect44
+        //Rect22
         let mut subdiv = SubdivisionSet::new();
         subdiv.elements = self.objects.3;
+        subdiv.subdivide();
+        meshes.push(Triangle::triangle_list_to_mesh(subdiv.to_triangles()));
+        //Rect33
+        let mut subdiv = SubdivisionSet::new();
+        subdiv.elements = self.objects.4;
+        subdiv.subdivide();
+        meshes.push(Triangle::triangle_list_to_mesh(subdiv.to_triangles()));
+
+        //Rect44
+        let mut subdiv = SubdivisionSet::new();
+        subdiv.elements = self.objects.5;
         subdiv.subdivide();
         meshes.push(Triangle::triangle_list_to_mesh(subdiv.to_triangles()));
 

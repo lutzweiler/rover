@@ -23,9 +23,9 @@ Move the camera with `W` `A` `S` `D` as well as `Space` and `Shift` for vertical
 Quit the app with `Esc` or `Ctrl`+`Q`.  
 
 ## Supported Primitives
-- colored bicubic bezier surface [CBEZ333](http://www.geomview.org/docs/html/BBP-and-BEZ.html#BBP-and-BEZ)
-- colored biquartic bezier surface [CBEZ443](http://www.geomview.org/docs/html/BBP-and-BEZ.html#BBP-and-BEZ)
+- colored bezier surfaces in [CBEZ](http://www.geomview.org/docs/html/BBP-and-BEZ.html#BBP-and-BEZ) format
+    - bilinear (_CBEZ113_), biquadratic (_CBEZ223_), bicubic (_CBEZ333_) and biquartic (_CBEZ443_)
 - triangles [OFF](http://www.geomview.org/docs/html/OFF.html#OFF)
     - triangles for wich every vertex is supplied with color values will be be drawn with per-vertex coloring
     - other triangles will get a default color
-    - always use the _OFF_ header keyword instead of _COFF_
+    - coloring happens whether _OFF_ or _COFF_ header keyword is used
