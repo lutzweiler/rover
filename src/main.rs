@@ -49,7 +49,11 @@ struct Args {
 
     /// Background color in rgb hex format, eg. ffffff for white
     #[clap(short, long, parse(try_from_str=util::str_to_color))]
-    background: Option<Color>,
+    background_color: Option<Color>,
+
+    /// Default color for objects that do not contain color data in rgb hex format
+    #[clap(short, long, parse(try_from_str=util::str_to_color))]
+    default_color: Option<Color>,
 }
 
 impl FromWorld for Args {
@@ -76,7 +80,13 @@ fn load_objects(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let my_meshes = match builder::parse_file(&args.path) {
+    let default_color = match args.default_color {
+        Some(x) => x,
+        None => Color::rgb(0.8, 0.8, 0.8),
+    };
+    let default_color = Vec3::new(default_color.r(), default_color.g(), default_color.b());
+    let builder = builder::MeshBuilder::new(default_color);
+    let my_meshes = match builder.parse_file(&args.path) {
         Ok(m) => m,
         Err(e) => {
             println!("An error occured while parsing the input file");
@@ -106,7 +116,7 @@ fn scene_setup(
     meshes: ResMut<Assets<Mesh>>,
     materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    if let Some(bg_color) = args.background {
+    if let Some(bg_color) = args.background_color {
         commands.insert_resource(ClearColor(bg_color));
     }
     commands.insert_resource(AmbientLight {

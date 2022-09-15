@@ -46,7 +46,7 @@ impl Triangle<Vec3> {
 }
 
 impl Triangle<Vec3> {
-    pub fn from_string(lines: [&String; 3]) -> Result<Self, String> {
+    pub fn from_string(lines: [&String; 3], default_color: Color) -> Result<Self, String> {
         let mut has_color = true;
         for pos in lines {
             if pos.split_whitespace().count() < 6 {
@@ -58,11 +58,7 @@ impl Triangle<Vec3> {
             true => Triangle::from_string_with_color(lines),
             false => Triangle::from_string_without_color(
                 lines,
-                [
-                    Color::new(0.8, 0.8, 0.8),
-                    Color::new(0.8, 0.8, 0.8),
-                    Color::new(0.8, 0.8, 0.8),
-                ],
+                [default_color, default_color, default_color]
             ),
         }
     }
@@ -165,7 +161,7 @@ mod tests {
         let a0 = format!("1.0 3.0 .4 .2 .3 .9");
         let a1 = format!("0 3.0 -.4 .2 0 .9");
         let a2 = format!("-2 3.0 .4 .2 1 .9");
-        let t = Triangle::from_string([&a0, &a1, &a2]).unwrap();
+        let t = Triangle::from_string([&a0, &a1, &a2], Color::new(1., 1., 1.)).unwrap();
         assert_eq!(t.points[0], Vec3::new(1., 3., 0.4));
         assert_eq!(t.points[1], Vec3::new(0., 3., -0.4));
         assert_eq!(t.points[2], Vec3::new(-2., 3., 0.4));
@@ -179,7 +175,7 @@ mod tests {
         let a0 = format!("1.0 3.0 .4");
         let a1 = format!("0 3.0 -.4");
         let a2 = format!("-2 3.0 .4");
-        let t = Triangle::from_string([&a0, &a1, &a2]).unwrap();
+        let t = Triangle::from_string([&a0, &a1, &a2], Color::new(0.8, 0.8, 0.8)).unwrap();
         assert_eq!(t.points[0], Vec3::new(1., 3., 0.4));
         assert_eq!(t.points[1], Vec3::new(0., 3., -0.4));
         assert_eq!(t.points[2], Vec3::new(-2., 3., 0.4));

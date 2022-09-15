@@ -6,6 +6,7 @@ use crate::bezier::rectangle::{BezierRectangle, FromString};
 use crate::subdivision::SubdivisionSet;
 use crate::triangle::{ToTriangle, Triangle};
 use bevy::prelude::{Mesh, Vec3};
+use Vec3 as Color;
 
 /*
     for now, building and parsing is tedious. Because loaded objects have their own types,
@@ -63,7 +64,7 @@ fn match_line_type(line: &String) -> LineType {
     }
 }
 
-struct MeshBuilder {
+pub struct MeshBuilder {
     strings: [String; 6],
     objects: (
         (),
@@ -73,10 +74,11 @@ struct MeshBuilder {
         Vec<BezierRectangle<Vec3, 3, 3>>,
         Vec<BezierRectangle<Vec3, 4, 4>>,
     ),
+    default_color: Color
 }
 
 impl MeshBuilder {
-    fn new() -> Self {
+    pub fn new(default_color: Color) -> Self {
         MeshBuilder {
             strings: [String::new(), String::new(), String::new(), String::new(), String::new(), String::new()],
             objects: (
@@ -87,6 +89,7 @@ impl MeshBuilder {
                 Vec::<BezierRectangle<Vec3, 3, 3>>::new(),
                 Vec::<BezierRectangle<Vec3, 4, 4>>::new(),
             ),
+            default_color: default_color,
         }
     }
 
@@ -183,7 +186,7 @@ impl MeshBuilder {
                 .map(|s| s.to_string())
                 .collect();
             if positions.len() == 3 {
-                let triangle = Triangle::from_string([&positions[0], &positions[1], &positions[2]]);
+                let triangle = Triangle::from_string([&positions[0], &positions[1], &positions[2]], self.default_color);
                 match triangle {
                     Ok(t) => {
                         self.objects.1.push(t);
@@ -228,39 +231,38 @@ impl MeshBuilder {
 
         meshes
     }
-}
 
-pub fn parse_file<P>(path: P) -> Result<Vec<Mesh>, String>
-where
-    P: AsRef<Path>,
-{
-    let file = match File::open(path) {
-        Ok(file) => file,
-        Err(e) => return Err(e.to_string()),
-    };
-
-    let mut mesh_builder = MeshBuilder::new();
-    let mut current_type = OffType::None;
-    for line in io::BufReader::new(file).lines() {
-        let line = match line {
-            Ok(l) => l,
-            Err(e) => continue,
+    pub fn parse_file<P>(mut self, path: P) -> Result<Vec<Mesh>, String>
+    where
+        P: AsRef<Path>,
+    {
+        let file = match File::open(path) {
+            Ok(file) => file,
+            Err(e) => return Err(e.to_string()),
         };
-        if line.is_empty() {
-            continue;
-        }
-        match match_line_type(&line) {
-            LineType::Values => {
-                mesh_builder.strings[offtype_id(&current_type)].push_str(&line);
-                mesh_builder.strings[offtype_id(&current_type)].push_str("\n");
-            }
-            LineType::Header(offtype) => {
-                current_type = offtype;
-            }
-        }
-    }
 
-    mesh_builder.build_objects();
-    let meshes = mesh_builder.build_meshes();
-    Ok(meshes)
+        let mut current_type = OffType::None;
+        for line in io::BufReader::new(file).lines() {
+            let line = match line {
+                Ok(l) => l,
+                Err(e) => continue,
+            };
+            if line.is_empty() {
+                continue;
+            }
+            match match_line_type(&line) {
+                LineType::Values => {
+                    self.strings[offtype_id(&current_type)].push_str(&line);
+                    self.strings[offtype_id(&current_type)].push_str("\n");
+                }
+                LineType::Header(offtype) => {
+                    current_type = offtype;
+                }
+            }
+        }
+
+        self.build_objects();
+        let meshes = self.build_meshes();
+        Ok(meshes)
+    }
 }
