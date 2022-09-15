@@ -32,32 +32,29 @@ mod builder;
 mod math;
 mod subdivision;
 mod triangle;
+mod util;
 
 //use bevy_fly_camera::{FlyCamera, FlyCameraPlugin};
 mod bevy_fly_camera;
 
 use bevy::{app::AppExit, input::keyboard::KeyboardInput, prelude::*};
 use clap::Parser;
-use std::path::Path;
 
 #[derive(Parser)]
 #[clap(version, about, long_about = None)]
 struct Args {
-    #[clap(parse(try_from_str=file_exists))]
+    /// File containing objects to be displayed
+    #[clap(parse(try_from_str=util::file_exists))]
     path: String,
+
+    /// Background color in rgb hex format, eg. ffffff for white
+    #[clap(short, long, parse(try_from_str=util::str_to_color))]
+    background: Option<Color>,
 }
 
 impl FromWorld for Args {
     fn from_world(world: &mut World) -> Self {
         Args::parse()
-    }
-}
-
-fn file_exists(path: &str) -> Result<String, String> {
-    if Path::new(path).exists() {
-        Ok(path.to_string())
-    } else {
-        Err("File not found".to_string())
     }
 }
 
@@ -103,7 +100,15 @@ fn load_objects(
     }
 }
 
-fn scene_setup(mut commands: Commands, meshes: ResMut<Assets<Mesh>>, materials: ResMut<Assets<StandardMaterial>>) {
+fn scene_setup(
+    args: Res<Args>,
+    mut commands: Commands,
+    meshes: ResMut<Assets<Mesh>>,
+    materials: ResMut<Assets<StandardMaterial>>,
+) {
+    if let Some(bg_color) = args.background {
+        commands.insert_resource(ClearColor(bg_color));
+    }
     commands.insert_resource(AmbientLight {
         color: Color::WHITE,
         brightness: 0.8,
