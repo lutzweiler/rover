@@ -1,6 +1,7 @@
 use bevy::{
     prelude::*,
     render::mesh::{Indices, PrimitiveTopology},
+    render::render_asset::RenderAssetUsages,
 };
 use std::ops::{Add, Mul, Sub};
 use Vec3 as Color;
@@ -120,7 +121,7 @@ impl Triangle<Vec3> {
 
 impl Triangle<Vec3> {
     pub fn triangle_list_to_mesh(triangles: Vec<Triangle<Vec3>>) -> Mesh {
-        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
+        let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::default());
         let mut indices = Vec::<u32>::new();
         let mut positions = Vec::<[f32; 3]>::new();
         let mut normals = Vec::<[f32; 3]>::new();
@@ -143,7 +144,7 @@ impl Triangle<Vec3> {
             }
         }
 
-        mesh.set_indices(Some(Indices::U32(indices)));
+        mesh.insert_indices(Indices::U32(indices));
         mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
         mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
         mesh.insert_attribute(Mesh::ATTRIBUTE_COLOR, colors);

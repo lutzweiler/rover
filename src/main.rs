@@ -123,7 +123,7 @@ fn scene_setup(
     }
     commands.insert_resource(AmbientLight {
         color: Color::WHITE,
-        brightness: 0.8,
+        brightness: 800.,
     });
     commands
         .spawn_empty()
@@ -134,9 +134,9 @@ fn scene_setup(
         .insert(bevy_fly_camera::lib::FlyCamera::default());
 }
 
-fn app_exit(mut exit: EventWriter<AppExit>, input: Res<Input<KeyCode>>) {
+fn app_exit(mut exit: EventWriter<AppExit>, input: Res<ButtonInput<KeyCode>>) {
     let esc = input.any_pressed([KeyCode::Escape]);
-    let q = input.any_pressed([KeyCode::Q]);
+    let q = input.any_pressed([KeyCode::KeyQ]);
     let ctrl = input.any_pressed([KeyCode::ControlLeft, KeyCode::ControlRight]);
 
     if esc || ctrl && q {
