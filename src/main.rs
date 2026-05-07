@@ -66,7 +66,7 @@ impl Resource for Args {}
 
 fn main() {
     App::new()
-        .insert_resource(Msaa::Sample4)
+        //.insert_resource(Msaa::Sample4)
         .init_resource::<Args>()
         .add_plugins(DefaultPlugins)
         .add_systems(Startup, scene_setup)
@@ -103,12 +103,11 @@ fn load_objects(
         triangle_material.base_color = Color::WHITE; //lets 100% of vertex colors through
         triangle_material.double_sided = false; //for lighting on backside not sure which is right
 
-        commands.spawn(PbrBundle {
-            mesh: meshes.add(mesh),
-            material: materials.add(triangle_material),
-            transform: Transform::from_xyz(0.0, 0.0, 0.0),
-            ..default()
-        });
+        commands.spawn((
+            Mesh3d(meshes.add(mesh)),
+            MeshMaterial3d(materials.add(triangle_material)),
+            Transform::from_xyz(0.0, 0.0, 0.0),
+        ));
     }
 }
 
@@ -127,10 +126,10 @@ fn scene_setup(
     });
     commands
         .spawn_empty()
-        .insert(Camera3dBundle {
-            transform: Transform::from_xyz(1.5, 1.5, 12.0).looking_at(Vec3::ZERO, Vec3::Y),
-            ..Default::default()
-        })
+        .insert((
+            Camera3d::default(),
+            Transform::from_xyz(1.5, 1.5, 12.0).looking_at(Vec3::ZERO, Vec3::Y),
+        ))
         .insert(bevy_fly_camera::lib::FlyCamera::default());
 }
 
