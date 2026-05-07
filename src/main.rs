@@ -123,6 +123,7 @@ fn scene_setup(
     commands.insert_resource(AmbientLight {
         color: Color::WHITE,
         brightness: 800.,
+        affects_lightmapped_meshes: true,
     });
     commands
         .spawn_empty()
@@ -139,6 +140,6 @@ fn app_exit(mut exit: EventWriter<AppExit>, input: Res<ButtonInput<KeyCode>>) {
     let ctrl = input.any_pressed([KeyCode::ControlLeft, KeyCode::ControlRight]);
 
     if esc || ctrl && q {
-        exit.send(AppExit::Success);
+        exit.write(AppExit::Success);
     }
 }
