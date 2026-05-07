@@ -62,6 +62,8 @@ impl FromWorld for Args {
     }
 }
 
+impl Resource for Args {}
+
 fn main() {
     App::new()
         .insert_resource(Msaa { samples: 4 })
@@ -101,7 +103,7 @@ fn load_objects(
         triangle_material.base_color = Color::WHITE; //lets 100% of vertex colors through
         triangle_material.double_sided = false; //for lighting on backside not sure which is right
 
-        commands.spawn_bundle(PbrBundle {
+        commands.spawn(PbrBundle {
             mesh: meshes.add(mesh),
             material: materials.add(triangle_material),
             transform: Transform::from_xyz(0.0, 0.0, 0.0),
@@ -124,8 +126,8 @@ fn scene_setup(
         brightness: 0.8,
     });
     commands
-        .spawn()
-        .insert_bundle(Camera3dBundle {
+        .spawn_empty()
+        .insert(Camera3dBundle {
             transform: Transform::from_xyz(1.5, 1.5, 12.0).looking_at(Vec3::ZERO, Vec3::Y),
             ..Default::default()
         })
