@@ -18,7 +18,7 @@ pub fn str_to_color(color: &str) -> Result<Color, String> {
     let r = hex_to_int(&color[offset + 0..offset + 2]).ok_or("parsing error".to_string())? as u8;
     let g = hex_to_int(&color[offset + 2..offset + 4]).ok_or("parsing error".to_string())? as u8;
     let b = hex_to_int(&color[offset + 4..offset + 6]).ok_or("parsing error".to_string())? as u8;
-    Ok(Color::rgb_u8(r, g, b))
+    Ok(Color::srgb_u8(r, g, b))
 }
 
 pub fn hex_char_val(c: char) -> Option<u8> {
@@ -66,7 +66,7 @@ mod tests {
 
     #[test]
     fn hex_to_color() {
-        assert_eq!(str_to_color("ff00ff").unwrap(), Color::rgb(1., 0., 1.));
-        assert_eq!(str_to_color("#0000ff").unwrap(), Color::rgb(0., 0., 1.));
+        assert_eq!(str_to_color("ff00ff").unwrap(), Color::srgb(1., 0., 1.));
+        assert_eq!(str_to_color("#0000ff").unwrap(), Color::srgb(0., 0., 1.));
     }
 }

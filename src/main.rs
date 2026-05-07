@@ -84,9 +84,9 @@ fn load_objects(
 ) {
     let default_color = match args.default_color {
         Some(x) => x,
-        None => Color::rgb(0.8, 0.8, 0.8),
-    };
-    let default_color = Vec3::new(default_color.r(), default_color.g(), default_color.b());
+        None => Color::srgba(0.8, 0.8, 0.8, 1.0),
+    }.to_srgba();
+    let default_color = Vec3::new(default_color.red, default_color.green, default_color.blue);
     let builder = builder::MeshBuilder::new(default_color);
     let my_meshes = match builder.parse_file(&args.path) {
         Ok(m) => m,
@@ -140,6 +140,6 @@ fn app_exit(mut exit: EventWriter<AppExit>, input: Res<ButtonInput<KeyCode>>) {
     let ctrl = input.any_pressed([KeyCode::ControlLeft, KeyCode::ControlRight]);
 
     if esc || ctrl && q {
-        exit.send(AppExit);
+        exit.send(AppExit::Success);
     }
 }
