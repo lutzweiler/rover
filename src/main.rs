@@ -69,10 +69,10 @@ fn main() {
         .insert_resource(Msaa::Sample4)
         .init_resource::<Args>()
         .add_plugins(DefaultPlugins)
-        .add_startup_system(scene_setup)
-        .add_startup_system(load_objects)
-        .add_plugin(bevy_fly_camera::lib::FlyCameraPlugin)
-        .add_system(app_exit)
+        .add_systems(Startup, scene_setup)
+        .add_systems(Startup, load_objects)
+        .add_plugins(bevy_fly_camera::lib::FlyCameraPlugin)
+        .add_systems(Update, app_exit)
         .run();
 }
 
@@ -137,7 +137,7 @@ fn scene_setup(
 fn app_exit(mut exit: EventWriter<AppExit>, input: Res<Input<KeyCode>>) {
     let esc = input.any_pressed([KeyCode::Escape]);
     let q = input.any_pressed([KeyCode::Q]);
-    let ctrl = input.any_pressed([KeyCode::LControl, KeyCode::RControl]);
+    let ctrl = input.any_pressed([KeyCode::ControlLeft, KeyCode::ControlRight]);
 
     if esc || ctrl && q {
         exit.send(AppExit);
