@@ -120,7 +120,7 @@ fn scene_setup(
     if let Some(bg_color) = args.background_color {
         commands.insert_resource(ClearColor(bg_color));
     }
-    commands.insert_resource(AmbientLight {
+    commands.insert_resource(GlobalAmbientLight {
         color: Color::WHITE,
         brightness: 800.,
         affects_lightmapped_meshes: true,
