@@ -1,7 +1,7 @@
 use bevy::{
     prelude::*,
-    render::mesh::{Indices, PrimitiveTopology},
-    render::render_asset::RenderAssetUsages,
+    mesh::{Indices, PrimitiveTopology},
+    asset::RenderAssetUsages,
 };
 use std::ops::{Add, Mul, Sub};
 use Vec3 as Color;

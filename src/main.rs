@@ -134,7 +134,7 @@ fn scene_setup(
         .insert(bevy_fly_camera::lib::FlyCamera::default());
 }
 
-fn app_exit(mut exit: EventWriter<AppExit>, input: Res<ButtonInput<KeyCode>>) {
+fn app_exit(mut exit: MessageWriter<AppExit>, input: Res<ButtonInput<KeyCode>>) {
     let esc = input.any_pressed([KeyCode::Escape]);
     let q = input.any_pressed([KeyCode::KeyQ]);
     let ctrl = input.any_pressed([KeyCode::ControlLeft, KeyCode::ControlRight]);
